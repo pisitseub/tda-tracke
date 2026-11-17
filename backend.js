@@ -33,7 +33,7 @@
     if (!overlay) {
       overlay = document.createElement("div");
       overlay.style.cssText = "position:fixed;inset:0;z-index:99;background:rgba(10,22,38,.78);display:grid;place-items:center;font-family:system-ui,sans-serif";
-      overlay.innerHTML = '<div style="background:#fff;color:#172033;padding:28px;border-radius:16px;max-width:340px;width:calc(100% - 32px);text-align:center"><h2 style="margin:0 0 6px">TDA Project Tracker</h2><p id="lm" style="color:#6b778c;font-size:.9rem"></p><button id="lb" style="padding:10px 20px;border:0;border-radius:10px;background:#0284c7;color:#fff;font-size:1rem;cursor:pointer">Continue with Google</button></div>';
+      overlay.innerHTML = '<div style="background:#fff;color:#172033;padding:28px;border-radius:16px;max-width:360px;width:calc(100% - 32px);text-align:left"><h2 style="margin:0 0 6px;text-align:center">TDA Project Tracker</h2><p id="lm" style="color:#6b778c;font-size:.9rem;text-align:center">Enter your name, then continue with Google.</p><label for="loginName" style="display:block;font-size:.82rem;font-weight:600;margin:14px 0 5px">Your name</label><input id="loginName" type="text" autocomplete="name" maxlength="80" placeholder="Enter your first and last name" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d9e2ef;border-radius:9px;font:inherit;margin-bottom:12px"><button id="lb" style="width:100%;padding:11px 20px;border:0;border-radius:10px;background:#0284c7;color:#fff;font-size:1rem;cursor:pointer">Continue with Google</button></div>';
       document.body.appendChild(overlay);
       overlay.querySelector("#lb").onclick = async () => {
         const button = overlay.querySelector("#lb");
@@ -84,7 +84,7 @@
         canEdit: isHead(u)
       };
     },
-    isOwner: async () => isHead(await ready),
+    isOwner: async () => isHead(await ready),\n    signOut: async () => auth.signOut(),
     profiles: async ids => Object.fromEntries(ids.map(id => [id, { name: names[id] || "" }]))
   };
 
