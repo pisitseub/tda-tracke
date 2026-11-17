@@ -8,18 +8,13 @@
     console.error("TDA Tracker: Firebase configuration is missing.");
     return;
   }
-
   if (!firebase.apps.length) firebase.initializeApp(C);
 
   const auth = firebase.auth();
   const fs = firebase.firestore();
   const names = {};
   const isHead = u => !!u && H.includes(String(u.email || "").toLowerCase());
-
   const provider = () => {
-    if (window.AUTH_PROVIDER === "microsoft") {
-      return new firebase.auth.OAuthProvider("microsoft.com");
-    }
     const p = new firebase.auth.GoogleAuthProvider();
     p.setCustomParameters({ prompt: "select_account" });
     return p;
@@ -37,9 +32,17 @@
       document.body.appendChild(overlay);
       overlay.querySelector("#lb").onclick = async () => {
         const button = overlay.querySelector("#lb");
+        const enteredName = overlay.querySelector("#loginName").value.trim();
+        if (!enteredName) {
+          overlay.querySelector("#lm").textContent = "Please enter your name before continuing.";
+          overlay.querySelector("#loginName").focus();
+          return;
+        }
         button.disabled = true;
         try {
-          await auth.signInWithPopup(provider());
+          const credential = await auth.signInWithPopup(provider());
+          await credential.user.updateProfile({ displayName: enteredName });
+          location.reload();
         } catch (e) {
           overlay.querySelector("#lm").textContent = "Sign-in failed: " + (e.code || "unknown error");
         } finally {
@@ -53,10 +56,9 @@
 
   auth.onAuthStateChanged(async u => {
     if (!u) {
-      login("Sign in with any verified Google account.");
+      login("Enter your name, then sign in with Google.");
       return;
     }
-
     const email = String(u.email || "").toLowerCase();
     if (!u.emailVerified) {
       await auth.signOut();
@@ -68,7 +70,6 @@
       login("Please use an @" + D + " account.");
       return;
     }
-
     if (overlay) overlay.style.display = "none";
     resolveUser(u);
   });
@@ -81,10 +82,12 @@
         name: u.displayName || u.email,
         email: u.email,
         emailVerified: u.emailVerified,
+        photoURL: u.photoURL || "",
         canEdit: isHead(u)
       };
     },
-    isOwner: async () => isHead(await ready),\n    signOut: async () => auth.signOut(),
+    isOwner: async () => isHead(await ready),
+    signOut: async () => auth.signOut(),
     profiles: async ids => Object.fromEntries(ids.map(id => [id, { name: names[id] || "" }]))
   };
 
