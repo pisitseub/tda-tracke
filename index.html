@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Test Development & Automation – Project Tracker</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--tx:#172033;--mu:#6b778c;--bd:#e3e8f0;--in:#f7f9fc;--pr:#4f46e5;--pr2:#7c3aed;--ok:#059669;--okb:#d1fae5;--wk:#d97706;--wkb:#fef3c7;--no:#64748b;--nob:#e8edf4;--bad:#dc2626;--badb:#fee2e2;--sh:0 1px 2px rgba(23,32,51,.05),0 6px 20px rgba(23,32,51,.06);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1220;--card:#171d2e;--tx:#e9edf6;--mu:#93a0b8;--bd:#273049;--in:#10162a;--pr:#818cf8;--pr2:#a78bfa;--ok:#34d399;--okb:#0f3a2e;--wk:#fbbf24;--wkb:#3d2e0c;--no:#94a3b8;--nob:#242d44;--bad:#f87171;--badb:#451a1a;--sh:0 6px 20px rgba(0,0,0,.35);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1220;--card:#171d2e;--tx:#e9edf6;--mu:#93a0b8;--bd:#273049;--in:#10162a;--pr:#818cf8;--pr2:#a78bfa;--ok:#34d399;--okb:#0f3a2e;--wk:#fbbf24;--wkb:#3d2e0c;--no:#94a3b8;--nob:#242d44;--bad:#f87171;--badb:#451a1a;--sh:0 6px 20px rgba(0,0,0,.35);color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Inter","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+.hero{background:linear-gradient(120deg,#0369a1,#0ea5e9 55%,#7dd3fc);color:#fff;padding:26px 16px 70px}
+.in{max-width:1040px;margin:0 auto}
+.hero small{letter-spacing:.14em;text-transform:uppercase;opacity:.8;font-size:.72rem;font-weight:600}
+.hero h1{margin:4px 0 2px;font-size:1.6rem;line-height:1.2}
+.hero p{margin:0;opacity:.85;font-size:.9rem}
+.main{max-width:1040px;margin:-48px auto 0;padding:0 16px 32px}
+.tabs{display:inline-flex;gap:4px;background:var(--card);padding:5px;border-radius:14px;box-shadow:var(--sh);margin-bottom:16px;flex-wrap:wrap}
+.tabs button{border:0;background:transparent;color:var(--mu);padding:9px 16px;border-radius:10px;font:inherit;font-weight:600;font-size:.9rem;cursor:pointer}
+.tabs button.on{background:linear-gradient(120deg,var(--pr),var(--pr2));color:#fff}
+.c{background:var(--card);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:var(--sh);border:1px solid var(--bd)}
+h2{font-size:1rem;margin:0 0 12px;font-weight:700}
+.mu{color:var(--mu);font-size:.84rem}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.k{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;box-shadow:var(--sh)}
+.k b{display:block;font-size:1.7rem;line-height:1.1}.k span{font-size:.78rem;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+label{display:block;font-size:.76rem;font-weight:600;color:var(--mu);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--in);color:var(--tx);font:inherit;font-size:.92rem}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--pr);outline-offset:-1px}
+.btn{padding:10px 18px;border:0;border-radius:10px;background:linear-gradient(120deg,var(--pr),var(--pr2));color:#fff;font:inherit;font-weight:600;font-size:.9rem;cursor:pointer}
+.btn.s{background:transparent;color:var(--tx);border:1px solid var(--bd);padding:7px 12px;font-weight:500;font-size:.82rem}
+.row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:99px;font-size:.76rem;font-weight:600;white-space:nowrap}
+.pill:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p0{color:var(--no);background:var(--nob)}.p1{color:var(--wk);background:var(--wkb)}.p2{color:var(--ok);background:var(--okb)}.pb{color:var(--bad);background:var(--badb)}
+.bad{color:var(--bad);font-weight:600}.ok{color:var(--ok);font-weight:600}
+.pr{padding:14px;border:1px solid var(--bd);border-radius:12px;margin-bottom:10px;background:var(--in)}
+.pr.l{border-left:4px solid var(--bad)}
+.pr .t{font-weight:700}
+.pr .acts{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pr .acts select{width:auto;padding:7px 10px;font-size:.82rem}
+.av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:.9rem;flex:none}
+.tc{border:1px solid var(--bd);border-radius:14px;padding:14px;background:var(--card);box-shadow:var(--sh)}
+.tc .h{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.bar{height:8px;border-radius:6px;background:var(--nob);overflow:hidden;display:flex;margin:8px 0}.bar i{display:block;height:100%}
+.sc{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.86rem}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);text-align:left;padding:8px 10px;border-bottom:2px solid var(--bd);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--bd);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.hide{display:none}
+.empty{text-align:center;padding:26px;color:var(--mu)}
+#msg{background:var(--badb);color:var(--bad);border-color:transparent}
+:root{--bg:#eef6fd;--pr:#0284c7;--pr2:#38bdf8;--in:#f4f9fe;--bd:#d9e8f5;--sh:0 1px 2px rgba(2,60,110,.05),0 6px 20px rgba(2,100,170,.09)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1626;--card:#10223a;--in:#0b1a2e;--bd:#1e3a5c;--pr:#0ea5e9;--pr2:#38bdf8}}
+:root[data-theme="dark"]{--bg:#0a1626;--card:#10223a;--in:#0b1a2e;--bd:#1e3a5c;--pr:#0ea5e9;--pr2:#38bdf8}
+.job{display:inline-block;margin-left:6px;padding:1px 9px;border-radius:6px;font-size:.72rem;font-weight:700;background:rgba(14,165,233,.14);color:var(--pr);vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="hero"><div class="in">
+  <small>Department</small>
+  <h1>Test Development &amp; Automation</h1>
+  <p>Project Tracker · <span id="who">Loading…</span></p>
+</div></div>
+
+<div class="main">
+  <div class="tabs"><button id="t1" class="on">My Projects</button><button id="t2" class="hide">Team Overview</button><button id="t3" class="hide">Annual Report</button></div>
+  <div id="msg" class="c hide"></div>
+
+  <section id="v1">
+    <div class="c">
+      <h2 id="ft">Add a new project</h2>
+      <div class="g">
+        <div style="grid-column:1/-1"><label>Project name</label><input id="fn" placeholder="e.g. Regression suite migration"></div>
+        <div><label>Job type</label><select id="fj"><option>Service</option><option>Mass</option><option>Support</option><option>NPI</option></select></div>
+        <div><label>Status</label><select id="fs"><option value="0">Not started</option><option value="1">In progress</option><option value="2">Completed</option></select></div>
+        <div><label>Start date</label><input type="date" id="fa"></div>
+        <div><label>Due date</label><input type="date" id="fb"></div>
+      </div>
+      <div style="margin-top:12px"><label>What I do in this project</label><textarea id="fd" rows="3" placeholder="e.g. Writing Selenium test cases for the login module, setting up the CI pipeline, reviewing teammates’ scripts…"></textarea></div>
+      <div style="margin-top:12px" class="row"><span class="bad" id="fe"></span><span><button class="btn s hide" id="fc">Cancel</button> <button class="btn" id="fx">Save project</button></span></div>
+    </div>
+    <h2 style="margin:6px 2px 10px">My projects</h2>
+    <div id="mine"></div>
+  </section>
+
+  <section id="v2" class="hide">
+    <div class="kpis" id="kpi"></div>
+    <div class="c"><h2>Team status</h2><div class="g" id="team" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))"></div></div>
+    <div class="c"><h2>All projects</h2><div class="sc"><table id="all"></table></div></div>
+  </section>
+
+  <section id="v3" class="hide">
+    <div class="c">
+      <div class="row" style="margin-bottom:8px"><h2 style="margin:0">Annual performance by engineer</h2>
+        <span style="display:flex;gap:8px"><select id="yr" style="width:auto"></select><select id="pp" style="width:auto"><option value="all">All engineers</option></select></span></div>
+      <p class="mu" style="margin-top:0">Counts projects started in the selected year. “On time” = completed on or before the due date. This dashboard is visible only to the department head. At year-end, export the CSV files (summary or per-person details) to send to the CEO.</p>
+      <div class="sc"><table id="rep"></table></div>
+      <div class="row" style="margin-top:14px"><span class="mu">Export for the selected year &amp; engineer</span><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn s" id="dl">Summary CSV</button><button class="btn" id="dd">Details CSV</button></span></div>
+      <div id="dash" style="margin-top:10px"></div>
+    </div>
+  </section>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="backend.js"></script>
+<script>
+const ST=["Not started","In progress","Completed"];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+const fmt=d=>d?new Date(d+"T00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"–";
+const COL=["#0284c7","#0ea5e9","#0891b2","#2563eb","#0d9488","#3b82f6","#0369a1","#06b6d4"];
+let db,user,me=null,isMgr=false,projects=[],names={},editId=null;
+
+const strip=({owner,...r})=>r;
+const mineItems=()=>projects.filter(p=>p.owner===me).map(strip);
+const saveMine=items=>db.collection("pjt").doc(me).set({items});
+function note(t){const m=$("msg");m.textContent=t;m.classList.remove("hide")}
+function late(p){return p.status==2?(p.done&&p.end&&p.done>p.end):(p.end&&p.end<today())}
+function pill(p){return `<span class="pill p${p.status}">${ST[p.status]}</span>`}
+function nm(id){return id===me&&!names[id]?"Me":(names[id]||"Team member")}
+function av(id){const n=nm(id),h=[...String(id)].reduce((a,c)=>a+c.charCodeAt(0),0);return `<div class="av" style="background:${COL[h%COL.length]}">${esc(n.trim().slice(0,1).toUpperCase())}</div>`}
+
+async function resolveNames(){
+  const ids=[...new Set(projects.map(p=>p.owner))].filter(Boolean);
+  try{const ps=await user.profiles(ids);ids.forEach(i=>names[i]=ps[i]&&ps[i].name||names[i]||"")}catch(e){}
+}
+function renderMine(){
+  const mine=projects.filter(p=>p.owner===me).sort((a,b)=>(a.status==2)-(b.status==2)||(a.end||"9").localeCompare(b.end||"9"));
+  $("mine").innerHTML=mine.length?mine.map(p=>`<div class="pr${late(p)&&p.status!=2?" l":""}"><div class="row"><span class="t">${esc(p.name)}<span class="job">${esc(p.job||"Service")}</span></span>${pill(p)}</div>
+    <div class="mu">${fmt(p.start)} → ${fmt(p.end)}${p.status==2?" · finished "+fmt(p.done):""} ${late(p)?`<span class="bad">· ${p.status==2?"finished late":"overdue"}</span>`:""}</div>
+    ${p.desc?`<div style="margin-top:6px;font-size:.9rem"><span class="mu">My work:</span> ${esc(p.desc)}</div>`:""}
+    <div class="acts"><select data-s="${p.id}">${ST.map((s,i)=>`<option value="${i}"${i==p.status?" selected":""}>${s}</option>`).join("")}</select>
+    <button class="btn s" data-e="${p.id}">Edit</button><button class="btn s" data-d="${p.id}">Delete</button></div></div>`).join(""):'<div class="c empty">No projects yet — add your first one above.</div>';
+}
+function stats(list){
+  const r={n:list.length,s:[0,0,0],ontime:0,lateDone:0,overdue:0};
+  list.forEach(p=>{r.s[p.status]++;if(p.status==2){late(p)?r.lateDone++:r.ontime++}else if(late(p))r.overdue++});
+  return r;
+}
+function renderMgr(){
+  const t=stats(projects),by={};projects.forEach(p=>(by[p.owner]=by[p.owner]||[]).push(p));
+  const ids=Object.keys(by).sort((a,b)=>nm(a).localeCompare(nm(b)));
+  const free=ids.filter(i=>!by[i].some(p=>p.status==1)).length;
+  $("kpi").innerHTML=[["Total projects",t.n],["In progress",t.s[1]],["Completed",t.s[2]],["Overdue",t.overdue],["Available engineers",free]].map(([l,v])=>`<div class="k"><b${l=="Overdue"&&v?' class="bad"':""}>${v}</b><span>${l}</span></div>`).join("");
+  $("team").innerHTML=ids.length?ids.map(id=>{
+    const s=stats(by[id]),busy=s.s[1]>0,w=k=>s.n?s.s[k]/s.n*100:0;
+    const cur=by[id].filter(p=>p.status==1).map(p=>esc(p.name)).join(", ");
+    return `<div class="tc"><div class="h">${av(id)}<div style="flex:1"><b>${esc(nm(id))}</b><div class="mu">${s.n} project${s.n==1?"":"s"}</div></div><span class="pill ${busy?"p1":"p2"}">${busy?"Busy":"Available"}</span></div>
+    <div class="bar"><i style="width:${w(2)}%;background:var(--ok)"></i><i style="width:${w(1)}%;background:var(--wk)"></i><i style="width:${w(0)}%;background:var(--no)"></i></div>
+    <div class="mu">Done ${s.s[2]} · In progress ${s.s[1]} · Not started ${s.s[0]}</div>
+    <div class="mu">On time ${s.ontime} · Late ${s.lateDone} · Overdue <span class="${s.overdue?"bad":""}">${s.overdue}</span></div>
+    <div class="mu">${["Service","Mass","Support","NPI"].map(j=>j+" "+by[id].filter(p=>(p.job||"Service")==j).length).join(" · ")}</div>
+    ${cur?`<div style="font-size:.85rem;margin-top:8px"><span class="mu">Working on:</span> ${cur}</div>`:""}</div>`}).join(""):'<div class="empty" style="grid-column:1/-1">No data yet</div>';
+  const all=[...projects].sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))||(a.end||"9").localeCompare(b.end||"9"));
+  $("all").innerHTML="<tr><th>Engineer</th><th>Project</th><th>Job type</th><th>What they do</th><th>Status</th><th>Start</th><th>Due</th><th>Finished</th><th>Timing</th></tr>"+
+    all.map(p=>`<tr><td>${esc(nm(p.owner))}</td><td>${esc(p.name)}</td><td>${esc(p.job||"Service")}</td><td style="white-space:normal;min-width:220px">${esc(p.desc||"–")}</td><td>${pill(p)}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${fmt(p.done)}</td><td>${p.status==2?(late(p)?'<span class="bad">Late</span>':'<span class="ok">On time</span>'):(late(p)?'<span class="bad">Overdue</span>':"–")}</td></tr>`).join("");
+}
+function yearRows(){
+  const y=$("yr").value,by={};
+  scoped(y).forEach(p=>(by[p.owner]=by[p.owner]||[]).push(p));
+  return Object.keys(by).map(id=>{const s=stats(by[id]);return{name:nm(id),n:s.n,done:s.s[2],ontime:s.ontime,late:s.lateDone,open:s.s[0]+s.s[1],overdue:s.overdue,rate:s.s[2]?Math.round(s.ontime/s.s[2]*100):0}}).sort((a,b)=>b.done-a.done);
+}
+function renderRep(){
+  const ys=new Set(projects.map(p=>(p.start||p.created||"").slice(0,4)).filter(Boolean));ys.add(String(new Date().getFullYear()));
+  const cur=$("yr").value||String(new Date().getFullYear());
+  const pv=$("pp").value||"all",oi=[...new Set(projects.map(p=>p.owner))].sort((a,b)=>nm(a).localeCompare(nm(b)));
+  $("pp").innerHTML='<option value="all">All engineers</option>'+oi.map(i=>`<option value="${esc(i)}"${i==pv?" selected":""}>${esc(nm(i))}</option>`).join("");
+  $("yr").innerHTML=[...ys].sort().reverse().map(y=>`<option${y==cur?" selected":""}>${y}</option>`).join("");
+  const r=yearRows();
+  $("rep").innerHTML="<tr><th>Engineer</th><th>Projects</th><th>Completed</th><th>On time</th><th>Late</th><th>Open</th><th>Overdue</th><th>On-time rate</th></tr>"+
+    (r.length?r.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${x.n}</td><td>${x.done}</td><td>${x.ontime}</td><td>${x.late}</td><td>${x.open}</td><td>${x.overdue}</td><td><b class="${x.rate>=80?"ok":x.rate<50&&x.done?"bad":""}">${x.rate}%</b></td></tr>`).join(""):'<tr><td colspan="8" class="empty">No projects in this year</td></tr>');$("dash").innerHTML=dashHTML();
+}
+function render(){renderMine();if(isMgr){renderMgr();renderRep()}}
+function show(n){[1,2,3].forEach(i=>{$("v"+i).classList.toggle("hide",i!=n);$("t"+i).classList.toggle("on",i==n)})}
+[1,2,3].forEach(i=>$("t"+i).onclick=()=>show(i));
+
+function resetForm(){editId=null;["fn","fa","fb","fd"].forEach(i=>$(i).value="");$("fs").value="0";$("fj").value="Service";$("ft").textContent="Add a new project";$("fc").classList.add("hide");$("fe").textContent=""}
+$("fc").onclick=resetForm;
+$("fx").onclick=async()=>{
+  const name=$("fn").value.trim(),start=$("fa").value,end=$("fb").value;
+  if(!name){$("fe").textContent="Please enter a project name";return}
+  if(start&&end&&end<start){$("fe").textContent="Due date can’t be before the start date";return}
+  const status=+$("fs").value,old=projects.find(p=>p.id==editId);
+  const data={owner:me,name,job:$("fj").value,desc:$("fd").value.trim(),status,start,end,done:status==2?(old&&old.done)||today():"",created:(old&&old.created)||today()};
+  try{const id=editId||("p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));const items=mineItems().filter(x=>x.id!=id);items.push({id,...strip(data)});await saveMine(items);resetForm()}
+  catch(e){$("fe").textContent="Couldn’t save — check your access permission ("+(e.code||"error")+")"}
+};
+$("mine").onclick=async e=>{
+  const t=e.target,p=projects.find(x=>x.id==(t.dataset.e||t.dataset.d));if(!p)return;
+  if(t.dataset.e){editId=p.id;$("fn").value=p.name;$("fj").value=p.job||"Service";$("fs").value=p.status;$("fa").value=p.start||"";$("fb").value=p.end||"";$("fd").value=p.desc||"";$("ft").textContent="Edit project";$("fc").classList.remove("hide");scrollTo(0,0)}
+  if(t.dataset.d&&confirm("Delete “"+p.name+"”?"))try{await saveMine(mineItems().filter(x=>x.id!=p.id))}catch(x){note("Couldn’t delete")}
+};
+$("mine").onchange=async e=>{
+  const id=e.target.dataset.s;if(!id)return;const p=projects.find(x=>x.id==id),s=+e.target.value;
+  try{await saveMine(mineItems().map(x=>x.id==id?{...x,status:s,done:s==2?(p.done||today()):""}:x))}catch(x){note("Couldn’t update status")}
+};
+$("yr").onchange=renderRep;$("pp").onchange=renderRep;
+const DCSS=`.dsh{font-family:Inter,"Noto Sans Thai",system-ui,sans-serif;color:var(--tx)}.dsh h2{font-size:1.2rem;margin:0}.dsh h3{margin:20px 0 8px;font-size:.92rem}.dk{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px}.dk div{border:1px solid var(--bd);border-radius:12px;padding:10px 12px;background:var(--card)}.dk b{display:block;font-size:1.5rem}.dk span{font-size:.7rem;color:var(--mu);text-transform:uppercase;font-weight:600}.br{display:grid;grid-template-columns:140px 1fr 46px;gap:8px;align-items:center;margin:6px 0;font-size:.84rem}.bt{height:12px;border-radius:6px;background:var(--nob);overflow:hidden}.bt>div{display:flex;height:100%}.bt i{display:block;height:100%}.mo{display:flex;gap:6px;align-items:flex-end;height:120px}.mo div{flex:1;text-align:center;font-size:.7rem;color:var(--mu);display:flex;flex-direction:column;justify-content:flex-end;height:100%}.mo i{display:block;background:linear-gradient(var(--pr2),var(--pr));border-radius:4px 4px 0 0;width:70%;margin:0 auto}.lg{font-size:.76rem;color:var(--mu);margin-top:6px}.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 12px}.dsh table{width:100%;border-collapse:collapse;font-size:.8rem}.dsh th{text-align:left;font-size:.68rem;text-transform:uppercase;color:var(--mu);padding:7px;border-bottom:2px solid var(--bd)}.dsh td{padding:7px;border-bottom:1px solid var(--bd);vertical-align:top}.dsh .sc{overflow-x:auto}.dsh .ok{color:var(--ok);font-weight:600}.dsh .bad{color:var(--bad);font-weight:600}`;
+const EXPCSS=`:root{--bg:#eef6fd;--card:#fff;--tx:#172033;--mu:#6b778c;--bd:#d9e8f5;--nob:#e8edf4;--pr:#0284c7;--pr2:#38bdf8;--ok:#059669;--wk:#d97706;--no:#64748b;--bad:#dc2626}body{margin:0;background:var(--bg);padding:24px}.wrap{max-width:980px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;border:1px solid var(--bd)}`;
+document.head.appendChild(Object.assign(document.createElement("style"),{textContent:DCSS}));
+function scoped(y){const s=$("pp").value||"all";return projects.filter(p=>(p.start||p.created||"").slice(0,4)==y&&(s=="all"||p.owner==s))}
+function dashHTML(){
+  const y=$("yr").value,sel=$("pp").value||"all",L=scoped(y),t=stats(L),who=sel=="all"?"All engineers":nm(sel);
+  const rate=t.s[2]?Math.round(t.ontime/t.s[2]*100):0;
+  const J=["Service","Mass","Support","NPI"],jc=J.map(j=>L.filter(p=>(p.job||"Service")==j).length),jm=Math.max(1,...jc);
+  const mo=Array(12).fill(0);L.forEach(p=>{if(p.status==2&&p.done&&p.done.slice(0,4)==y)mo[+p.done.slice(5,7)-1]++});const mm=Math.max(1,...mo);
+  const per=sel=="all"?[...new Set(L.map(p=>p.owner))].map(id=>({id,s:stats(L.filter(p=>p.owner==id))})).sort((a,b)=>b.s.s[2]-a.s.s[2]):[];
+  const pm=Math.max(1,...per.map(x=>x.s.n));
+  const seg=(s,k)=>[s.ontime,s.lateDone,s.s[1],s.s[0]][k]/s.n*100;
+  const rows=[...L].sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))||(a.start||"").localeCompare(b.start||""));
+  return `<div class="dsh"><h2>Test Development &amp; Automation – Annual Dashboard ${esc(y)}</h2><div class="mu">${esc(who)} · generated ${fmt(today())}</div>
+  <div class="dk"><div><b>${t.n}</b><span>Projects</span></div><div><b>${t.s[2]}</b><span>Completed</span></div><div><b>${rate}%</b><span>On-time rate</span></div><div><b>${t.s[1]}</b><span>In progress</span></div><div><b>${t.overdue}</b><span>Overdue</span></div></div>
+  ${per.length?`<h3>Workload &amp; delivery by engineer</h3>${per.map(x=>`<div class="br"><span>${esc(nm(x.id))}</span><div class="bt"><div style="width:${x.s.n/pm*100}%">${["--ok","--wk","--pr","--no"].map((c,k)=>`<i style="width:${seg(x.s,k)}%;background:var(${c})"></i>`).join("")}</div></div><span>${x.s.s[2]}/${x.s.n}</span></div>`).join("")}<div class="lg"><i style="background:var(--ok)"></i>Done on time<i style="background:var(--wk)"></i>Done late<i style="background:var(--pr)"></i>In progress<i style="background:var(--no)"></i>Not started</div>`:""}
+  <h3>Projects by job type</h3>${J.map((j,i)=>`<div class="br"><span>${j}</span><div class="bt"><div style="width:${jc[i]/jm*100}%;background:var(--pr)"></div></div><span>${jc[i]}</span></div>`).join("")}
+  <h3>Completed per month</h3><div class="mo">${mo.map((v,i)=>`<div><i style="height:${v/mm*80}%"></i>${v||""}<br>${"JFMAMJJASOND"[i]}</div>`).join("")}</div>
+  <h3>Project list</h3><div class="sc"><table><tr><th>Engineer</th><th>Project</th><th>Job type</th><th>What they do</th><th>Status</th><th>Start</th><th>Due</th><th>Finished</th><th>Timing</th></tr>${rows.map(p=>`<tr><td>${esc(nm(p.owner))}</td><td>${esc(p.name)}</td><td>${esc(p.job||"Service")}</td><td>${esc(p.desc||"–")}</td><td>${ST[p.status]}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${fmt(p.done)}</td><td class="${late(p)?"bad":"ok"}">${p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"–")}</td></tr>`).join("")}</table></div></div>`;
+}
+const q=v=>'"'+String(v).replace(/"/g,'""')+'"',csvOut=rows=>String.fromCharCode(65279)+rows.map(r=>r.map(q).join(",")).join(String.fromCharCode(10));
+const tag2=()=>$("yr").value+($("pp").value=="all"?"-all":"-"+nm($("pp").value).replace(/[^\p{L}\p{N}.-]+/gu,"_"));
+async function saveFile(name,data){const dl=await claude.use("downloads");if(!dl){note("Downloads are not available in this browser");return}try{await dl.save({filename:name,data})}catch(e){if(e.code!="declined")note("Download failed ("+(e.code||"error")+")")}}
+$("dl").onclick=()=>saveFile(`TDA-summary-${tag2()}.csv`,csvOut([["Engineer","Projects","Completed","On time","Late","Open","Overdue","On-time rate %"],...yearRows().map(x=>[x.name,x.n,x.done,x.ontime,x.late,x.open,x.overdue,x.rate])]));
+$("dd").onclick=()=>saveFile(`TDA-details-${tag2()}.csv`,csvOut([["Engineer","Project","Job type","What they do","Status","Start","Due","Finished","Timing"],...scoped($("yr").value).sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))).map(p=>[nm(p.owner),p.name,p.job||"Service",p.desc||"",ST[p.status],p.start||"",p.end||"",p.done||"",p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"")])]));
+const dhOld=()=>saveFile(`TDA-dashboard-${tag2()}.html`,`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TDA Annual Dashboard ${$("yr").value}</title><style>${EXPCSS}${DCSS}</style></head><body><div class="wrap">${dashHTML()}</div></body></html>`);
+const oldDl=async()=>{
+  const dl=await claude.use("downloads");if(!dl){note("Downloads are not available in this browser");return}
+  const y=$("yr").value,h=["Engineer","Projects","Completed","On time","Late","Open","Overdue","On-time rate %"];
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const csv="\ufeff"+[h,...yearRows().map(x=>[x.name,x.n,x.done,x.ontime,x.late,x.open,x.overdue,x.rate])].map(r=>r.map(q).join(",")).join("\n");
+  try{await dl.save({filename:`TDA-annual-report-${y}.csv`,data:csv})}catch(e){if(e.code!="declined")note("Download failed")}
+};
+(async()=>{
+  try{
+    user=await claude.use("user");db=await claude.use("db");
+    if(!db||!user){$("who").textContent="Please sign in to use this page";return}
+    const m=await user.me();me=m.id;if(!me){$("who").textContent="Please sign in with your company account";return}isMgr=await user.isOwner();names[me]=m.name;
+    $("who").textContent="Signed in as "+(m.name||"you")+(isMgr?" · Department head":" · Engineer");
+    if(isMgr){$("t2").classList.remove("hide");$("t3").classList.remove("hide")}
+    const tm=setTimeout(()=>note("Loading is taking a while — try refreshing the page"),10000);
+    db.collection("pjt").doc(me).onSnapshot(sn=>{clearTimeout(tm);if(!isMgr){projects=(((sn.data()||{}).items)||[]).map(x=>({...x,owner:me}));render()}},e=>note("Couldn’t load your projects ("+e.code+")"));
+    if(isMgr)db.collection("pjt").onSnapshot(async s=>{clearTimeout(tm);projects=s.docs.flatMap(d=>((d.data()||{}).items||[]).map(x=>({...x,owner:d.id})));await resolveNames();render()},e=>note("Couldn’t load data ("+e.code+")"));
+  }catch(e){$("who").textContent="Connection error"}
+})();
+</script>
+</body>
+</html>
