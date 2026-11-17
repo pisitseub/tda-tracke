@@ -57,6 +57,7 @@ tr:last-child td{border-bottom:0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1626;--card:#10223a;--in:#0b1a2e;--bd:#1e3a5c;--pr:#0ea5e9;--pr2:#38bdf8}}
 :root[data-theme="dark"]{--bg:#0a1626;--card:#10223a;--in:#0b1a2e;--bd:#1e3a5c;--pr:#0ea5e9;--pr2:#38bdf8}
 .job{display:inline-block;margin-left:6px;padding:1px 9px;border-radius:6px;font-size:.72rem;font-weight:700;background:rgba(14,165,233,.14);color:var(--pr);vertical-align:middle}
+.profilebar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}.profilepic{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.8);background:#fff}.profileinitial{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.65);font-weight:700}.profilemeta{min-width:0;flex:1}.profilemeta strong,.profilemeta span{display:block;overflow-wrap:anywhere}.profilemeta span{font-size:.8rem;opacity:.82}.logoutbtn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 13px;border-radius:9px;font:inherit;font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
@@ -64,6 +65,7 @@ tr:last-child td{border-bottom:0}
   <small>Department</small>
   <h1>Test Development &amp; Automation</h1>
   <p>Project Tracker · <span id="who">Loading…</span></p>
+  <div id="profileBar" class="profilebar hide"><div id="profilePhoto"></div><div class="profilemeta"><strong id="profileName"></strong><span id="profileEmail"></span></div><button id="logout" class="logoutbtn" type="button">Log out</button></div>
 </div></div>
 
 <div class="main">
@@ -240,7 +242,8 @@ const oldDl=async()=>{
   try{
     user=await claude.use("user");db=await claude.use("db");
     if(!db||!user){$("who").textContent="Please sign in to use this page";return}
-    const m=await user.me();me=m.id;if(!me){$("who").textContent="Please sign in with your company account";return}isMgr=await user.isOwner();names[me]=m.name;
+    const m=await user.me();me=m.id;if(!me){$("who").textContent="Please sign in with your Google account";return}isMgr=await user.isOwner();names[me]=m.name;
+    $("profileName").textContent=m.name||"Team member";$("profileEmail").textContent=m.email||"";\n    const photo=$("profilePhoto");photo.innerHTML="";if(m.photoURL){const img=document.createElement("img");img.className="profilepic";img.alt="Profile photo";img.referrerPolicy="no-referrer";img.src=m.photoURL;photo.appendChild(img)}else{const fallback=document.createElement("div");fallback.className="profileinitial";fallback.textContent=(m.name||m.email||"?").trim().charAt(0).toUpperCase();photo.appendChild(fallback)}$("profileBar").classList.remove("hide");$("logout").onclick=async()=>{if(confirm("Log out of TDA Project Tracker?")){await user.signOut();location.reload()}};
     $("who").textContent="Signed in as "+(m.name||"you")+(isMgr?" · Department head":" · Engineer");
     if(isMgr){$("t2").classList.remove("hide");$("t3").classList.remove("hide")}
     const tm=setTimeout(()=>note("Loading is taking a while — try refreshing the page"),10000);

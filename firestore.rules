@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null
+        && request.auth.token.email_verified == true;
+    }
+
+    function head() {
+      return signedIn()
+        && request.auth.token.email == 'pisit.seub@gmail.com';
+    }
+
+    match /pjt/{uid} {
+      // Every verified Google account may use its own UID document.
+      // The department head may read every employee's project document.
+      allow read: if signedIn()
+        && (request.auth.uid == uid || head());
+
+      // Employees may only change their own project document.
+      // The head may write their own document; cross-user editing is not
+      // enabled by the current UI/data model.
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+  }
+}
