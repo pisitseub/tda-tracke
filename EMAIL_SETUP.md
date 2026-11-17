@@ -14,9 +14,9 @@ This repository uses Firebase Cloud Functions (2nd gen) and Gmail SMTP. Emails s
 
 ### 1. Prepare the Gmail sender account
 
-For the pilot, the Gmail account used as the sender is `pisit.seub@gmail.com`. The visible sender name is still **TDA Project Tracker**.
+For the pilot, use a Gmail account that you or the department controls specifically for system notifications (or another approved sender account). Do not use the head's mailbox as the sender unless the account owner explicitly authorizes it. The recipient remains `pisit.seub@gmail.com`, and the visible sender name is **TDA Project Tracker**.
 
-1. Sign in to that Google account.
+1. Sign in to the Gmail account you will use as the system sender.
 2. Open Google Account > Security: https://myaccount.google.com/security
 3. Enable 2-Step Verification if it is not already enabled.
 4. Open App Passwords: https://myaccount.google.com/apppasswords
@@ -48,7 +48,7 @@ npm install --prefix functions
 
 ### 4. Store SMTP credentials as Firebase secrets
 
-Run these commands from the repository root. The CLI prompts for each value; enter the sender Gmail address and the 16-character App Password when prompted.
+Run these commands from the repository root. The CLI prompts for each value; enter the system sender Gmail address (not necessarily the recipient address) and its 16-character App Password when prompted.
 
 ```bash
 firebase functions:secrets:set SMTP_USER --project tda-tracke
