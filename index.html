@@ -91,6 +91,16 @@ tr:last-child td{border-bottom:0}
 
   <section id="v2" class="hide">
     <div class="kpis" id="kpi"></div>
+    <div class="c">
+      <div class="row"><h2>Find and filter team projects</h2><span class="mu" id="teamCount"></span></div>
+      <div class="g" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+        <div><label>Employee</label><select id="teamPerson"><option value="all">All employees</option></select></div>
+        <div><label>Status</label><select id="teamStatus"><option value="all">All statuses</option><option value="0">Not started</option><option value="1">In progress</option><option value="2">Completed</option><option value="overdue">Overdue</option></select></div>
+        <div><label>Job type</label><select id="teamJob"><option value="all">All job types</option><option>Service</option><option>Mass</option><option>Support</option><option>NPI</option></select></div>
+        <div><label>Search</label><input id="teamSearch" type="search" placeholder="Project, employee, work details…"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><span class="mu">Filters apply to team cards and project details.</span><button class="btn s" id="teamReset" type="button">Clear filters</button></div>
+    </div>
     <div class="c"><h2>Team status</h2><div class="g" id="team" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))"></div></div>
     <div class="c"><h2>All projects</h2><div class="sc"><table id="all"></table></div></div>
   </section>
@@ -148,22 +158,36 @@ function stats(list){
   return r;
 }
 function renderMgr(){
-  const t=stats(projects),by={};projects.forEach(p=>(by[p.owner]=by[p.owner]||[]).push(p));
+  const total=stats(projects),by={};projects.forEach(p=>(by[p.owner]=by[p.owner]||[]).push(p));
   const ids=Object.keys(by).sort((a,b)=>nm(a).localeCompare(nm(b)));
   const free=ids.filter(i=>!by[i].some(p=>p.status==1)).length;
-  $("kpi").innerHTML=[["Total projects",t.n],["In progress",t.s[1]],["Completed",t.s[2]],["Overdue",t.overdue],["Available engineers",free]].map(([l,v])=>`<div class="k"><b${l=="Overdue"&&v?' class="bad"':""}>${v}</b><span>${l}</span></div>`).join("");
-  $("team").innerHTML=ids.length?ids.map(id=>{
-    const s=stats(by[id]),busy=s.s[1]>0,w=k=>s.n?s.s[k]/s.n*100:0;
-    const cur=by[id].filter(p=>p.status==1).map(p=>esc(p.name)).join(", ");
+  $("kpi").innerHTML=[["Total projects",total.n],["In progress",total.s[1]],["Completed",total.s[2]],["Overdue",total.overdue],["Available engineers",free]].map(([l,v])=>`<div class="k"><b${l=="Overdue"&&v?' class="bad"':""}>${v}</b><span>${l}</span></div>`).join("");
+  const person=$("teamPerson"),selected=person.value||"all";
+  person.innerHTML='<option value="all">All employees</option>'+ids.map(i=>`<option value="${esc(i)}">${esc(nm(i))}</option>`).join("");
+  person.value=ids.includes(selected)?selected:"all";
+  const status=$("teamStatus").value||"all",job=$("teamJob").value||"all",query=($("teamSearch").value||"").trim().toLowerCase();
+  const matches=p=>{
+    if(person.value!=="all"&&p.owner!==person.value)return false;
+    if(status==="overdue"?!late(p)||p.status==2:status!=="all"&&String(p.status)!==status)return false;
+    if(job!=="all"&&(p.job||"Service")!==job)return false;
+    if(query&&!([nm(p.owner),p.name,p.desc,p.job].join(" ").toLowerCase().includes(query)))return false;
+    return true;
+  };
+  const visible=projects.filter(matches),visibleBy={};visible.forEach(p=>(visibleBy[p.owner]=visibleBy[p.owner]||[]).push(p));
+  const visibleIds=Object.keys(visibleBy).sort((a,b)=>nm(a).localeCompare(nm(b)));
+  $("teamCount").textContent=`Showing ${visible.length} of ${projects.length} projects · ${visibleIds.length} employees`;
+  $("team").innerHTML=visibleIds.length?visibleIds.map(id=>{
+    const s=stats(visibleBy[id]),busy=s.s[1]>0,w=k=>s.n?s.s[k]/s.n*100:0;
+    const cur=visibleBy[id].filter(p=>p.status==1).map(p=>esc(p.name)).join(", ");
     return `<div class="tc"><div class="h">${av(id)}<div style="flex:1"><b>${esc(nm(id))}</b><div class="mu">${s.n} project${s.n==1?"":"s"}</div></div><span class="pill ${busy?"p1":"p2"}">${busy?"Busy":"Available"}</span></div>
     <div class="bar"><i style="width:${w(2)}%;background:var(--ok)"></i><i style="width:${w(1)}%;background:var(--wk)"></i><i style="width:${w(0)}%;background:var(--no)"></i></div>
     <div class="mu">Done ${s.s[2]} · In progress ${s.s[1]} · Not started ${s.s[0]}</div>
     <div class="mu">On time ${s.ontime} · Late ${s.lateDone} · Overdue <span class="${s.overdue?"bad":""}">${s.overdue}</span></div>
-    <div class="mu">${["Service","Mass","Support","NPI"].map(j=>j+" "+by[id].filter(p=>(p.job||"Service")==j).length).join(" · ")}</div>
-    ${cur?`<div style="font-size:.85rem;margin-top:8px"><span class="mu">Working on:</span> ${cur}</div>`:""}</div>`}).join(""):'<div class="empty" style="grid-column:1/-1">No data yet</div>';
-  const all=[...projects].sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))||(a.end||"9").localeCompare(b.end||"9"));
+    <div class="mu">${["Service","Mass","Support","NPI"].map(j=>j+" "+visibleBy[id].filter(p=>(p.job||"Service")==j).length).join(" · ")}</div>
+    ${cur?`<div style="font-size:.85rem;margin-top:8px"><span class="mu">Working on:</span> ${cur}</div>`:""}</div>`}).join(""):'<div class="empty" style="grid-column:1/-1">No employees or projects match these filters.</div>';
+  const all=[...visible].sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))||(a.end||"9").localeCompare(b.end||"9"));
   $("all").innerHTML="<tr><th>Engineer</th><th>Project</th><th>Job type</th><th>What they do</th><th>Status</th><th>Start</th><th>Due</th><th>Finished</th><th>Timing</th></tr>"+
-    all.map(p=>`<tr><td>${esc(nm(p.owner))}</td><td>${esc(p.name)}</td><td>${esc(p.job||"Service")}</td><td style="white-space:normal;min-width:220px">${esc(p.desc||"–")}</td><td>${pill(p)}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${fmt(p.done)}</td><td>${p.status==2?(late(p)?'<span class="bad">Late</span>':'<span class="ok">On time</span>'):(late(p)?'<span class="bad">Overdue</span>':"–")}</td></tr>`).join("");
+    (all.length?all.map(p=>`<tr><td>${esc(nm(p.owner))}</td><td>${esc(p.name)}</td><td>${esc(p.job||"Service")}</td><td style="white-space:normal;min-width:220px">${esc(p.desc||"–")}</td><td>${pill(p)}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${fmt(p.done)}</td><td>${p.status==2?(late(p)?'<span class="bad">Late</span>':'<span class="ok">On time</span>'):(late(p)?'<span class="bad">Overdue</span>':"–")}</td></tr>`).join(""):'<tr><td colspan="9" class="empty">No projects match these filters.</td></tr>');
 }
 function yearRows(){
   const y=$("yr").value,by={};
@@ -205,6 +229,9 @@ $("mine").onchange=async e=>{
   try{await saveMine(mineItems().map(x=>x.id==id?{...x,status:s,done:s==2?(p.done||today()):""}:x))}catch(x){note("Couldn’t update status")}
 };
 $("yr").onchange=renderRep;$("pp").onchange=renderRep;
+["teamPerson","teamStatus","teamJob"].forEach(id=>$(id).onchange=renderMgr);
+$("teamSearch").oninput=renderMgr;
+$("teamReset").onclick=()=>{$("teamPerson").value="all";$("teamStatus").value="all";$("teamJob").value="all";$("teamSearch").value="";renderMgr()};
 const DCSS=`.dsh{font-family:Inter,"Noto Sans Thai",system-ui,sans-serif;color:var(--tx)}.dsh h2{font-size:1.2rem;margin:0}.dsh h3{margin:20px 0 8px;font-size:.92rem}.dk{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px}.dk div{border:1px solid var(--bd);border-radius:12px;padding:10px 12px;background:var(--card)}.dk b{display:block;font-size:1.5rem}.dk span{font-size:.7rem;color:var(--mu);text-transform:uppercase;font-weight:600}.br{display:grid;grid-template-columns:140px 1fr 46px;gap:8px;align-items:center;margin:6px 0;font-size:.84rem}.bt{height:12px;border-radius:6px;background:var(--nob);overflow:hidden}.bt>div{display:flex;height:100%}.bt i{display:block;height:100%}.mo{display:flex;gap:6px;align-items:flex-end;height:120px}.mo div{flex:1;text-align:center;font-size:.7rem;color:var(--mu);display:flex;flex-direction:column;justify-content:flex-end;height:100%}.mo i{display:block;background:linear-gradient(var(--pr2),var(--pr));border-radius:4px 4px 0 0;width:70%;margin:0 auto}.lg{font-size:.76rem;color:var(--mu);margin-top:6px}.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 12px}.dsh table{width:100%;border-collapse:collapse;font-size:.8rem}.dsh th{text-align:left;font-size:.68rem;text-transform:uppercase;color:var(--mu);padding:7px;border-bottom:2px solid var(--bd)}.dsh td{padding:7px;border-bottom:1px solid var(--bd);vertical-align:top}.dsh .sc{overflow-x:auto}.dsh .ok{color:var(--ok);font-weight:600}.dsh .bad{color:var(--bad);font-weight:600}`;
 const EXPCSS=`:root{--bg:#eef6fd;--card:#fff;--tx:#172033;--mu:#6b778c;--bd:#d9e8f5;--nob:#e8edf4;--pr:#0284c7;--pr2:#38bdf8;--ok:#059669;--wk:#d97706;--no:#64748b;--bad:#dc2626}body{margin:0;background:var(--bg);padding:24px}.wrap{max-width:980px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;border:1px solid var(--bd)}`;
 document.head.appendChild(Object.assign(document.createElement("style"),{textContent:DCSS}));
