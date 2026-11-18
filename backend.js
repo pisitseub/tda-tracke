@@ -14,7 +14,12 @@
   const fs = firebase.firestore();
   const names = {};
   const isHead = u => !!u && H.includes(String(u.email || "").toLowerCase());
-  const provider = () => {
+  const provider = type => {
+    if (type === "microsoft") {
+      const p = new firebase.auth.OAuthProvider("microsoft.com");
+      p.setCustomParameters({ prompt: "select_account" });
+      return p;
+    }
     const p = new firebase.auth.GoogleAuthProvider();
     p.setCustomParameters({ prompt: "select_account" });
     return p;
@@ -28,10 +33,10 @@
     if (!overlay) {
       overlay = document.createElement("div");
       overlay.style.cssText = "position:fixed;inset:0;z-index:99;background:rgba(10,22,38,.78);display:grid;place-items:center;font-family:system-ui,sans-serif";
-      overlay.innerHTML = '<div style="background:#fff;color:#172033;padding:28px;border-radius:16px;max-width:360px;width:calc(100% - 32px);text-align:left"><h2 style="margin:0 0 6px;text-align:center">TDA Project Tracker</h2><p id="lm" style="color:#6b778c;font-size:.9rem;text-align:center">Enter your name, then continue with Google.</p><label for="loginName" style="display:block;font-size:.82rem;font-weight:600;margin:14px 0 5px">Your name</label><input id="loginName" type="text" autocomplete="name" maxlength="80" placeholder="Enter your first and last name" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d9e2ef;border-radius:9px;font:inherit;margin-bottom:12px"><button id="lb" style="width:100%;padding:11px 20px;border:0;border-radius:10px;background:#0284c7;color:#fff;font-size:1rem;cursor:pointer">Continue with Google</button></div>';
+      overlay.innerHTML = '<div style="background:#fff;color:#172033;padding:28px;border-radius:16px;max-width:360px;width:calc(100% - 32px);text-align:left"><h2 style="margin:0 0 6px;text-align:center">TDA Project Tracker</h2><p id="lm" style="color:#6b778c;font-size:.9rem;text-align:center">Enter your name, then choose a sign-in method.</p><label for="loginName" style="display:block;font-size:.82rem;font-weight:600;margin:14px 0 5px">Your name</label><input id="loginName" type="text" autocomplete="name" maxlength="80" placeholder="Enter your first and last name" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d9e2ef;border-radius:9px;font:inherit;margin-bottom:12px"><button id="googleLogin" style="width:100%;padding:11px 20px;border:0;border-radius:10px;background:#0284c7;color:#fff;font-size:1rem;cursor:pointer;margin-bottom:9px">Continue with Google</button><button id="microsoftLogin" style="width:100%;padding:11px 20px;border:0;border-radius:10px;background:#263445;color:#fff;font-size:1rem;cursor:pointer">Continue with Microsoft</button></div>';
       document.body.appendChild(overlay);
-      overlay.querySelector("#lb").onclick = async () => {
-        const button = overlay.querySelector("#lb");
+      const signIn = async type => {
+        const button = overlay.querySelector(type === "microsoft" ? "#microsoftLogin" : "#googleLogin");
         const enteredName = overlay.querySelector("#loginName").value.trim();
         if (!enteredName) {
           overlay.querySelector("#lm").textContent = "Please enter your name before continuing.";
@@ -40,7 +45,7 @@
         }
         button.disabled = true;
         try {
-          const credential = await auth.signInWithPopup(provider());
+          const credential = await auth.signInWithPopup(provider(type));
           await credential.user.updateProfile({ displayName: enteredName });
           location.reload();
         } catch (e) {
@@ -49,20 +54,22 @@
           button.disabled = false;
         }
       };
+      overlay.querySelector("#googleLogin").onclick = () => signIn("google");
+      overlay.querySelector("#microsoftLogin").onclick = () => signIn("microsoft");
     }
     overlay.style.display = "grid";
-    overlay.querySelector("#lm").textContent = msg || "Sign in with any verified Google account.";
+    overlay.querySelector("#lm").textContent = msg || "Sign in with a verified Google or Microsoft account.";
   }
 
   auth.onAuthStateChanged(async u => {
     if (!u) {
-      login("Enter your name, then sign in with Google.");
+      login("Enter your name, then choose Google or Microsoft.");
       return;
     }
     const email = String(u.email || "").toLowerCase();
     if (!u.emailVerified) {
       await auth.signOut();
-      login("Please use a Google account with a verified email address.");
+      login("Please use an account with a verified email address.");
       return;
     }
     if (D && !email.endsWith("@" + D)) {
