@@ -11,5 +11,5 @@ window.AUTH_PROVIDER = "google";
 // 3) Only accounts from this email domain may enter (also enforce it in firestore.rules)
 window.ALLOWED_DOMAIN = "";
 // 4) The department head (sees Team Overview + Annual Report). Must match firestore.rules.
-window.HEAD_EMAILS = ["pisit.seub@gmail.com"];
+window.HEAD_EMAILS = ["tuchapong-ki@starsmicro.com"];
 
