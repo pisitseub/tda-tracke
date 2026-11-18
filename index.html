@@ -301,7 +301,7 @@ const oldDl=async()=>{
 };
 (async()=>{
   try{
-    if(!window.claude||typeof window.claude.use!=="function")throw new Error("Backend adapter failed to load. Check backend.js and Firebase scripts.");
+    if(!window.claude||typeof window.claude.use!=="function")throw new Error("Backend adapter failed to load. "+(window.TDA_BACKEND_ERROR||"Check backend.js and Firebase CDN script loading."));
     user=await window.claude.use("user");db=await window.claude.use("db");
     if(!db||!user){$("who").textContent="Please sign in to use this page";return}
     const m=await user.me();me=m.id;if(!me){$("who").textContent="Please sign in with your Google account";return}isHead=await user.isOwner();isDashboardViewer=await user.canViewDashboard();isMgr=isHead||isDashboardViewer;names[me]=m.name;
