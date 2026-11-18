@@ -251,16 +251,16 @@ $("fx").onclick=async()=>{
   const status=+$("fs").value,old=projects.find(p=>p.id==editId);
   const data={owner:me,customer:$("fcustomer").value.trim(),name,job:$("fj").value,desc:$("fd").value.trim(),status,start,end,done:status==2?(old&&old.done)||today():"",created:(old&&old.created)||today()};
   try{const id=editId||("p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));const items=mineItems().filter(x=>x.id!=id);items.push({id,...strip(data)});await saveMine(items);if(!old)notifyMail("new_project",data);else if(Number(old.status)!==Number(data.status))notifyMail("status_changed",data,old.status);resetForm()}
-  catch(e){$("fe").textContent="Couldn’t save — check your access permission ("+(e.code||"error")+")"}
+  catch(e){console.error("Project save failed:",e);$("fe").textContent="Save failed: "+(e.code||e.message||"unknown error")}
 };
 $("mine").onclick=async e=>{
   const t=e.target,p=projects.find(x=>x.id==(t.dataset.e||t.dataset.d));if(!p)return;
   if(t.dataset.e){editId=p.id;$("fcustomer").value=p.customer||"";$("fn").value=p.name;$("fj").value=p.job||"Service";$("fs").value=p.status;$("fa").value=p.start||"";$("fb").value=p.end||"";$("fd").value=p.desc||"";$("ft").textContent="Edit project";$("fc").classList.remove("hide");scrollTo(0,0)}
-  if(t.dataset.d&&confirm("Delete “"+p.name+"”?"))try{await saveMine(mineItems().filter(x=>x.id!=p.id))}catch(x){note("Couldn’t delete")}
+  if(t.dataset.d&&confirm("Delete “"+p.name+"”?"))try{await saveMine(mineItems().filter(x=>x.id!=p.id))}catch(x){console.error("Project delete failed:",x);note("Delete failed: "+(x.code||x.message||"unknown error"))}
 };
 $("mine").onchange=async e=>{
   const id=e.target.dataset.s;if(!id)return;const p=projects.find(x=>x.id==id),s=+e.target.value;
-  try{await saveMine(mineItems().map(x=>x.id==id?{...x,status:s,done:s==2?(p.done||today()):""}:x));if(Number(p.status)!==s)notifyMail("status_changed",{...p,status:s},p.status)}catch(x){note("Couldn’t update status")}
+  try{await saveMine(mineItems().map(x=>x.id==id?{...x,status:s,done:s==2?(p.done||today()):""}:x));if(Number(p.status)!==s)notifyMail("status_changed",{...p,status:s},p.status)}catch(x){console.error("Project status update failed:",x);note("Status update failed: "+(x.code||x.message||"unknown error"))}
 };
 $("yr").onchange=renderRep;$("pp").onchange=renderRep;
 ["teamPerson","teamStatus","teamJob"].forEach(id=>$(id).onchange=renderMgr);
