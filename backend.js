@@ -6,8 +6,10 @@
   const D = String(window.ALLOWED_DOMAIN || "").trim().toLowerCase();
 
   if (!C || !C.projectId) {
-    console.error("TDA Tracker: Firebase configuration is missing.");
-    return;
+    throw new Error("firebase-config.js did not load or FIREBASE_CONFIG.projectId is missing.");
+  }
+  if (typeof firebase === "undefined") {
+    throw new Error("Firebase SDK did not load. Check the firebase-app/auth/firestore CDN scripts or network blocking.");
   }
   if (!firebase.apps.length) firebase.initializeApp(C);
 
@@ -118,7 +120,7 @@
     },
     updatePhoto: async dataUrl => {
       const u = await ready;
-      if (!/^data:image\\/jpeg;base64,/.test(dataUrl)) {
+      if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/jpeg;base64,")) {
         throw new Error("Please choose a valid image.");
       }
       if (dataUrl.length > 180000) {
