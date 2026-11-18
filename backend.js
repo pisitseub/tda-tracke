@@ -52,7 +52,16 @@
           await credential.user.updateProfile({ displayName: enteredName });
           location.reload();
         } catch (e) {
-          overlay.querySelector("#lm").textContent = "Sign-in failed: " + (e.code || "unknown error");
+          console.error("TDA Tracker sign-in error:", {
+            provider: type,
+            code: e && e.code,
+            message: e && e.message,
+            email: e && e.email,
+            tenantId: "496ffcda-486d-4466-8256-db4b2138f12c"
+          }, e);
+          overlay.querySelector("#lm").textContent =
+            "Sign-in failed: " + (e.code || "unknown error") +
+            (e.message ? " — " + e.message : "");
         } finally {
           button.disabled = false;
         }
