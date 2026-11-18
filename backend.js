@@ -79,7 +79,10 @@
       return;
     }
     const email = String(u.email || "").toLowerCase();
-    if (!u.emailVerified) {
+    // Microsoft work accounts may authenticate successfully without Firebase
+    // setting emailVerified=true. Trust the Microsoft OAuth provider identity.
+    const isMicrosoft = (u.providerData || []).some(p => p.providerId === "microsoft.com");
+    if (!u.emailVerified && !isMicrosoft) {
       await auth.signOut();
       login("Please use an account with a verified email address.");
       return;
