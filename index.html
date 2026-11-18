@@ -136,6 +136,38 @@ const strip=({owner,...r})=>r;
 const mineItems=()=>projects.filter(p=>p.owner===me).map(strip);
 const saveMine=items=>db.collection("pjt").doc(me).set({items});
 function note(t){const m=$("msg");m.textContent=t;m.classList.remove("hide")}
+function notifyMail(event, project, oldStatus) {
+  try {
+    const current = firebase.auth().currentUser;
+    if (!current) return;
+    current.getIdToken().then(idToken => {
+      const payload = {
+        event,
+        idToken,
+        oldStatus,
+        project: {
+          customer: project.customer || "",
+          name: project.name || "",
+          employee: names[me] || current.displayName || current.email || "",
+          job: project.job || "",
+          remark: project.desc || "",
+          status: Number(project.status),
+          start: project.start || "",
+          end: project.end || ""
+        }
+      };
+      return fetch("https://script.google.com/macros/s/AKfycbysuuLiWZ1xqqplr65mi-BS9-o_D_2c-I9pS_yXHsVzlcHwrhlu7X7VDVFAlFpB6p0bXQ/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+    }).catch(error => console.warn("TDA email notification could not be sent:", error));
+  } catch (error) {
+    console.warn("TDA email notification error:", error);
+  }
+}
+
 function late(p){return p.status==2?(p.done&&p.end&&p.done>p.end):(p.end&&p.end<today())}
 function pill(p){return `<span class="pill p${p.status}">${ST[p.status]}</span>`}
 function nm(id){return id===me&&!names[id]?"Me":(names[id]||"Team member")}
@@ -218,7 +250,7 @@ $("fx").onclick=async()=>{
   if(start&&end&&end<start){$("fe").textContent="Due date can’t be before the start date";return}
   const status=+$("fs").value,old=projects.find(p=>p.id==editId);
   const data={owner:me,customer:$("fcustomer").value.trim(),name,job:$("fj").value,desc:$("fd").value.trim(),status,start,end,done:status==2?(old&&old.done)||today():"",created:(old&&old.created)||today()};
-  try{const id=editId||("p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));const items=mineItems().filter(x=>x.id!=id);items.push({id,...strip(data)});await saveMine(items);resetForm()}
+  try{const id=editId||("p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));const items=mineItems().filter(x=>x.id!=id);items.push({id,...strip(data)});await saveMine(items);if(!old)notifyMail("new_project",data);else if(Number(old.status)!==Number(data.status))notifyMail("status_changed",data,old.status);resetForm()}
   catch(e){$("fe").textContent="Couldn’t save — check your access permission ("+(e.code||"error")+")"}
 };
 $("mine").onclick=async e=>{
@@ -228,7 +260,7 @@ $("mine").onclick=async e=>{
 };
 $("mine").onchange=async e=>{
   const id=e.target.dataset.s;if(!id)return;const p=projects.find(x=>x.id==id),s=+e.target.value;
-  try{await saveMine(mineItems().map(x=>x.id==id?{...x,status:s,done:s==2?(p.done||today()):""}:x))}catch(x){note("Couldn’t update status")}
+  try{await saveMine(mineItems().map(x=>x.id==id?{...x,status:s,done:s==2?(p.done||today()):""}:x));if(Number(p.status)!==s)notifyMail("status_changed",{...p,status:s},p.status)}catch(x){note("Couldn’t update status")}
 };
 $("yr").onchange=renderRep;$("pp").onchange=renderRep;
 ["teamPerson","teamStatus","teamJob"].forEach(id=>$(id).onchange=renderMgr);
