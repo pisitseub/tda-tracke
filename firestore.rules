@@ -4,7 +4,33 @@ service cloud.firestore {
 
     function signedIn() {
       return request.auth != null
-        && request.auth.token.email_verified == true;
+        && (
+          request.auth.token.email_verified == true
+          || (
+            request.auth.token.firebase.sign_in_provider == 'microsoft.com'
+            && request.auth.token.email.matches('.*@starsmicro\\.com
+
+    function head() {
+      return signedIn()
+        && request.auth.token.email == 'tuchapong-ki@starsmicro.com';
+    }
+
+    match /pjt/{uid} {
+      // Every verified Google account may use its own UID document.
+      // The department head may read every employee's project document.
+      allow read: if signedIn()
+        && (request.auth.uid == uid || head());
+
+      // Employees may only change their own project document.
+      // The head may write their own document; cross-user editing is not
+      // enabled by the current UI/data model.
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+  }
+}
+)
+          )
+        );
     }
 
     function head() {
