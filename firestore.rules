@@ -8,27 +8,7 @@ service cloud.firestore {
           request.auth.token.email_verified == true
           || (
             request.auth.token.firebase.sign_in_provider == 'microsoft.com'
-            && request.auth.token.email.matches('.*@starsmicro\\.com
-
-    function head() {
-      return signedIn()
-        && request.auth.token.email == 'tuchapong-ki@starsmicro.com';
-    }
-
-    match /pjt/{uid} {
-      // Every verified Google account may use its own UID document.
-      // The department head may read every employee's project document.
-      allow read: if signedIn()
-        && (request.auth.uid == uid || head());
-
-      // Employees may only change their own project document.
-      // The head may write their own document; cross-user editing is not
-      // enabled by the current UI/data model.
-      allow write: if signedIn() && request.auth.uid == uid;
-    }
-  }
-}
-)
+            && request.auth.token.email.matches('.*@starsmicro\\.com$')
           )
         );
     }
@@ -38,16 +18,20 @@ service cloud.firestore {
         && request.auth.token.email == 'tuchapong-ki@starsmicro.com';
     }
 
-    match /pjt/{uid} {
-      // Every verified Google account may use its own UID document.
-      // The department head may read every employee's project document.
-      allow read: if signedIn()
-        && (request.auth.uid == uid || head());
+    function dashboardViewer() {
+      return signedIn()
+        && request.auth.token.email == 'travkertda@gmail.com';
+    }
 
-      // Employees may only change their own project document.
-      // The head may write their own document; cross-user editing is not
-      // enabled by the current UI/data model.
-      allow write: if signedIn() && request.auth.uid == uid;
+    match /pjt/{uid} {
+      // Employees read their own data; head and dashboard account can read all.
+      allow read: if signedIn()
+        && (request.auth.uid == uid || head() || dashboardViewer());
+
+      // Dashboard-only account cannot create, edit, or delete project/profile data.
+      allow write: if signedIn()
+        && request.auth.uid == uid
+        && !dashboardViewer();
     }
   }
 }
