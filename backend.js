@@ -1,5 +1,6 @@
 // Firebase Auth + Firestore adapter for TDA Project Tracker.
 (function () {
+  try {
   const C = window.FIREBASE_CONFIG;
   const H = (window.HEAD_EMAILS || []).map(s => String(s).trim().toLowerCase());
   const D = String(window.ALLOWED_DOMAIN || "").trim().toLowerCase();
@@ -175,4 +176,8 @@
   };
 
   window.claude = { use: async name => ({ user: userApi, db: dbApi, downloads: dlApi })[name] };
+  } catch (error) {
+    window.TDA_BACKEND_ERROR = (error && (error.stack || error.message)) || String(error);
+    console.error("TDA Tracker backend initialization failed:", error);
+  }
 })();
