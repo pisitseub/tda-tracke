@@ -17,7 +17,10 @@
   const provider = type => {
     if (type === "microsoft") {
       const p = new firebase.auth.OAuthProvider("microsoft.com");
-      p.setCustomParameters({ prompt: "select_account" });
+      p.setCustomParameters({
+        prompt: "select_account",
+        tenant: "496ffcda-486d-4466-8256-db4b2138f12c"
+      });
       return p;
     }
     const p = new firebase.auth.GoogleAuthProvider();
