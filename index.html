@@ -288,12 +288,12 @@ function dashHTML(){
 }
 const q=v=>'"'+String(v).replace(/"/g,'""')+'"',csvOut=rows=>String.fromCharCode(65279)+rows.map(r=>r.map(q).join(",")).join(String.fromCharCode(10));
 const tag2=()=>$("yr").value+($("pp").value=="all"?"-all":"-"+nm($("pp").value).replace(/[^\p{L}\p{N}.-]+/gu,"_"));
-async function saveFile(name,data){const dl=await claude.use("downloads");if(!dl){note("Downloads are not available in this browser");return}try{await dl.save({filename:name,data})}catch(e){if(e.code!="declined")note("Download failed ("+(e.code||"error")+")")}}
+async function saveFile(name,data){const dl=await window.claude.use("downloads");if(!dl){note("Downloads are not available in this browser");return}try{await dl.save({filename:name,data})}catch(e){if(e.code!="declined")note("Download failed ("+(e.code||"error")+")")}}
 $("dl").onclick=()=>saveFile(`TDA-summary-${tag2()}.csv`,csvOut([["Engineer","Projects","Completed","On time","Late","Open","Overdue","On-time rate %"],...yearRows().map(x=>[x.name,x.n,x.done,x.ontime,x.late,x.open,x.overdue,x.rate])]));
 $("dd").onclick=()=>saveFile(`TDA-details-${tag2()}.csv`,csvOut([["Engineer","Customer","Project name","Job type","Remark","Status","Start","Due","Finished","Timing"],...scoped($("yr").value).sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))).map(p=>[nm(p.owner),p.customer||"",p.name,p.job||"Service",p.desc||"",ST[p.status],p.start||"",p.end||"",p.done||"",p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"")])]));
 const dhOld=()=>saveFile(`TDA-dashboard-${tag2()}.html`,`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TDA Annual Dashboard ${$("yr").value}</title><style>${EXPCSS}${DCSS}</style></head><body><div class="wrap">${dashHTML()}</div></body></html>`);
 const oldDl=async()=>{
-  const dl=await claude.use("downloads");if(!dl){note("Downloads are not available in this browser");return}
+  const dl=await window.claude.use("downloads");if(!dl){note("Downloads are not available in this browser");return}
   const y=$("yr").value,h=["Engineer","Projects","Completed","On time","Late","Open","Overdue","On-time rate %"];
   const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
   const csv="\ufeff"+[h,...yearRows().map(x=>[x.name,x.n,x.done,x.ontime,x.late,x.open,x.overdue,x.rate])].map(r=>r.map(q).join(",")).join("\n");
@@ -301,7 +301,8 @@ const oldDl=async()=>{
 };
 (async()=>{
   try{
-    user=await claude.use("user");db=await claude.use("db");
+    if(!window.claude||typeof window.claude.use!=="function")throw new Error("Backend adapter failed to load. Check backend.js and Firebase scripts.");
+    user=await window.claude.use("user");db=await window.claude.use("db");
     if(!db||!user){$("who").textContent="Please sign in to use this page";return}
     const m=await user.me();me=m.id;if(!me){$("who").textContent="Please sign in with your Google account";return}isHead=await user.isOwner();isDashboardViewer=await user.canViewDashboard();isMgr=isHead||isDashboardViewer;names[me]=m.name;
     $("profileName").textContent=m.name||"Team member";$("profileEmail").textContent=m.email||"";
