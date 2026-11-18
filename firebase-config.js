@@ -13,5 +13,5 @@ window.ALLOWED_DOMAIN = "";
 // 4) The department head (sees Team Overview + Annual Report). Must match firestore.rules.
 window.HEAD_EMAILS = ["tuchapong-ki@starsmicro.com"];
 // Dashboard-only account: can view team dashboards, cannot edit projects.
-window.DASHBOARD_EMAILS = ["travkertda@gmail.com"];
+window.DASHBOARD_EMAILS = ["trackertda@gmail.com"];
 
