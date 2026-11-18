@@ -127,6 +127,12 @@
       return dataUrl;
     },
     isOwner: async () => isHead(await ready),
+    canViewDashboard: async () => {
+      const u = await ready;
+      const email = String(u.email || "").toLowerCase();
+      const viewers = (window.DASHBOARD_EMAILS || []).map(x => String(x).trim().toLowerCase());
+      return isHead(u) || viewers.includes(email);
+    },
     signOut: async () => auth.signOut(),
     profiles: async ids => Object.fromEntries(ids.map(id => [id, { name: names[id] || "" }]))
   };
