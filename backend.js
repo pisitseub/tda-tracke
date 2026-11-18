@@ -99,14 +99,32 @@
   const userApi = {
     me: async () => {
       const u = await ready;
+      let customPhotoURL = "";
+      try {
+        const profile = await fs.collection("pjt").doc(u.uid).get();
+        customPhotoURL = (profile.data() || {}).profilePhoto || "";
+      } catch (e) {
+        console.warn("TDA Tracker: could not load custom profile photo", e);
+      }
       return {
         id: u.uid,
         name: u.displayName || u.email,
         email: u.email,
         emailVerified: u.emailVerified,
-        photoURL: u.photoURL || "",
+        photoURL: customPhotoURL || u.photoURL || "",
         canEdit: isHead(u)
       };
+    },
+    updatePhoto: async dataUrl => {
+      const u = await ready;
+      if (!/^data:image\\/jpeg;base64,/.test(dataUrl)) {
+        throw new Error("Please choose a valid image.");
+      }
+      if (dataUrl.length > 180000) {
+        throw new Error("The compressed photo is too large. Please choose another image.");
+      }
+      await fs.collection("pjt").doc(u.uid).set({ profilePhoto: dataUrl }, { merge: true });
+      return dataUrl;
     },
     isOwner: async () => isHead(await ready),
     signOut: async () => auth.signOut(),
@@ -129,7 +147,7 @@
           return fs.collection(path).doc(id).set({
             ...data,
             name: u.displayName || u.email
-          });
+          }, { merge: true });
         },
         onSnapshot: (cb, err) => fs.collection(path).doc(id).onSnapshot(cb, err)
       })
