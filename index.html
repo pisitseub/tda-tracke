@@ -76,13 +76,14 @@ tr:last-child td{border-bottom:0}
     <div class="c">
       <h2 id="ft">Add a new project</h2>
       <div class="g">
-        <div style="grid-column:1/-1"><label>Project name</label><input id="fn" placeholder="e.g. Regression suite migration"></div>
+        <div><label>Customer</label><input id="fcustomer" placeholder="e.g. ABC Company"></div>
+        <div><label>Project name</label><input id="fn" placeholder="e.g. Regression suite migration"></div>
         <div><label>Job type</label><select id="fj"><option>Service</option><option>Mass</option><option>Support</option><option>NPI</option></select></div>
         <div><label>Status</label><select id="fs"><option value="0">Not started</option><option value="1">In progress</option><option value="2">Completed</option></select></div>
         <div><label>Start date</label><input type="date" id="fa"></div>
         <div><label>Due date</label><input type="date" id="fb"></div>
       </div>
-      <div style="margin-top:12px"><label>What I do in this project</label><textarea id="fd" rows="3" placeholder="e.g. Writing Selenium test cases for the login module, setting up the CI pipeline, reviewing teammates’ scripts…"></textarea></div>
+      <div style="margin-top:12px"><label>Remark</label><textarea id="fd" rows="3" placeholder="Additional notes or details…"></textarea></div>
       <div style="margin-top:12px" class="row"><span class="bad" id="fe"></span><span><button class="btn s hide" id="fc">Cancel</button> <button class="btn" id="fx">Save project</button></span></div>
     </div>
     <h2 style="margin:6px 2px 10px">My projects</h2>
@@ -147,8 +148,9 @@ async function resolveNames(){
 function renderMine(){
   const mine=projects.filter(p=>p.owner===me).sort((a,b)=>(a.status==2)-(b.status==2)||(a.end||"9").localeCompare(b.end||"9"));
   $("mine").innerHTML=mine.length?mine.map(p=>`<div class="pr${late(p)&&p.status!=2?" l":""}"><div class="row"><span class="t">${esc(p.name)}<span class="job">${esc(p.job||"Service")}</span></span>${pill(p)}</div>
+    ${p.customer?`<div class="mu">Customer: ${esc(p.customer)}</div>`:""}
     <div class="mu">${fmt(p.start)} → ${fmt(p.end)}${p.status==2?" · finished "+fmt(p.done):""} ${late(p)?`<span class="bad">· ${p.status==2?"finished late":"overdue"}</span>`:""}</div>
-    ${p.desc?`<div style="margin-top:6px;font-size:.9rem"><span class="mu">My work:</span> ${esc(p.desc)}</div>`:""}
+    ${p.desc?`<div style="margin-top:6px;font-size:.9rem"><span class="mu">Remark:</span> ${esc(p.desc)}</div>`:""}
     <div class="acts"><select data-s="${p.id}">${ST.map((s,i)=>`<option value="${i}"${i==p.status?" selected":""}>${s}</option>`).join("")}</select>
     <button class="btn s" data-e="${p.id}">Edit</button><button class="btn s" data-d="${p.id}">Delete</button></div></div>`).join(""):'<div class="c empty">No projects yet — add your first one above.</div>';
 }
@@ -170,7 +172,7 @@ function renderMgr(){
     if(person.value!=="all"&&p.owner!==person.value)return false;
     if(status==="overdue"?!late(p)||p.status==2:status!=="all"&&String(p.status)!==status)return false;
     if(job!=="all"&&(p.job||"Service")!==job)return false;
-    if(query&&!([nm(p.owner),p.name,p.desc,p.job].join(" ").toLowerCase().includes(query)))return false;
+    if(query&&!([nm(p.owner),p.customer,p.name,p.desc,p.job].join(" ").toLowerCase().includes(query)))return false;
     return true;
   };
   const visible=projects.filter(matches),visibleBy={};visible.forEach(p=>(visibleBy[p.owner]=visibleBy[p.owner]||[]).push(p));
@@ -186,8 +188,8 @@ function renderMgr(){
     <div class="mu">${["Service","Mass","Support","NPI"].map(j=>j+" "+visibleBy[id].filter(p=>(p.job||"Service")==j).length).join(" · ")}</div>
     ${cur?`<div style="font-size:.85rem;margin-top:8px"><span class="mu">Working on:</span> ${cur}</div>`:""}</div>`}).join(""):'<div class="empty" style="grid-column:1/-1">No employees or projects match these filters.</div>';
   const all=[...visible].sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))||(a.end||"9").localeCompare(b.end||"9"));
-  $("all").innerHTML="<tr><th>Engineer</th><th>Project</th><th>Job type</th><th>What they do</th><th>Status</th><th>Start</th><th>Due</th><th>Finished</th><th>Timing</th></tr>"+
-    (all.length?all.map(p=>`<tr><td>${esc(nm(p.owner))}</td><td>${esc(p.name)}</td><td>${esc(p.job||"Service")}</td><td style="white-space:normal;min-width:220px">${esc(p.desc||"–")}</td><td>${pill(p)}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${fmt(p.done)}</td><td>${p.status==2?(late(p)?'<span class="bad">Late</span>':'<span class="ok">On time</span>'):(late(p)?'<span class="bad">Overdue</span>':"–")}</td></tr>`).join(""):'<tr><td colspan="9" class="empty">No projects match these filters.</td></tr>');
+  $("all").innerHTML="<tr><th>Engineer</th><th>Customer</th><th>Project name</th><th>Job type</th><th>Remark</th><th>Status</th><th>Start</th><th>Due</th><th>Finished</th><th>Timing</th></tr>"+
+    (all.length?all.map(p=>`<tr><td>${esc(nm(p.owner))}</td><td>${esc(p.customer||"–")}</td><td>${esc(p.name)}</td><td>${esc(p.job||"Service")}</td><td style="white-space:normal;min-width:220px">${esc(p.desc||"–")}</td><td>${pill(p)}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${fmt(p.done)}</td><td>${p.status==2?(late(p)?'<span class="bad">Late</span>':'<span class="ok">On time</span>'):(late(p)?'<span class="bad">Overdue</span>':"–")}</td></tr>`).join(""):'<tr><td colspan="9" class="empty">No projects match these filters.</td></tr>');
 }
 function yearRows(){
   const y=$("yr").value,by={};
@@ -208,20 +210,20 @@ function render(){renderMine();if(isMgr){renderMgr();renderRep()}}
 function show(n){[1,2,3].forEach(i=>{$("v"+i).classList.toggle("hide",i!=n);$("t"+i).classList.toggle("on",i==n)})}
 [1,2,3].forEach(i=>$("t"+i).onclick=()=>show(i));
 
-function resetForm(){editId=null;["fn","fa","fb","fd"].forEach(i=>$(i).value="");$("fs").value="0";$("fj").value="Service";$("ft").textContent="Add a new project";$("fc").classList.add("hide");$("fe").textContent=""}
+function resetForm(){editId=null;["fcustomer","fn","fa","fb","fd"].forEach(i=>$(i).value="");$("fs").value="0";$("fj").value="Service";$("ft").textContent="Add a new project";$("fc").classList.add("hide");$("fe").textContent=""}
 $("fc").onclick=resetForm;
 $("fx").onclick=async()=>{
   const name=$("fn").value.trim(),start=$("fa").value,end=$("fb").value;
   if(!name){$("fe").textContent="Please enter a project name";return}
   if(start&&end&&end<start){$("fe").textContent="Due date can’t be before the start date";return}
   const status=+$("fs").value,old=projects.find(p=>p.id==editId);
-  const data={owner:me,name,job:$("fj").value,desc:$("fd").value.trim(),status,start,end,done:status==2?(old&&old.done)||today():"",created:(old&&old.created)||today()};
+  const data={owner:me,customer:$("fcustomer").value.trim(),name,job:$("fj").value,desc:$("fd").value.trim(),status,start,end,done:status==2?(old&&old.done)||today():"",created:(old&&old.created)||today()};
   try{const id=editId||("p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));const items=mineItems().filter(x=>x.id!=id);items.push({id,...strip(data)});await saveMine(items);resetForm()}
   catch(e){$("fe").textContent="Couldn’t save — check your access permission ("+(e.code||"error")+")"}
 };
 $("mine").onclick=async e=>{
   const t=e.target,p=projects.find(x=>x.id==(t.dataset.e||t.dataset.d));if(!p)return;
-  if(t.dataset.e){editId=p.id;$("fn").value=p.name;$("fj").value=p.job||"Service";$("fs").value=p.status;$("fa").value=p.start||"";$("fb").value=p.end||"";$("fd").value=p.desc||"";$("ft").textContent="Edit project";$("fc").classList.remove("hide");scrollTo(0,0)}
+  if(t.dataset.e){editId=p.id;$("fcustomer").value=p.customer||"";$("fn").value=p.name;$("fj").value=p.job||"Service";$("fs").value=p.status;$("fa").value=p.start||"";$("fb").value=p.end||"";$("fd").value=p.desc||"";$("ft").textContent="Edit project";$("fc").classList.remove("hide");scrollTo(0,0)}
   if(t.dataset.d&&confirm("Delete “"+p.name+"”?"))try{await saveMine(mineItems().filter(x=>x.id!=p.id))}catch(x){note("Couldn’t delete")}
 };
 $("mine").onchange=async e=>{
@@ -250,13 +252,13 @@ function dashHTML(){
   ${per.length?`<h3>Workload &amp; delivery by engineer</h3>${per.map(x=>`<div class="br"><span>${esc(nm(x.id))}</span><div class="bt"><div style="width:${x.s.n/pm*100}%">${["--ok","--wk","--pr","--no"].map((c,k)=>`<i style="width:${seg(x.s,k)}%;background:var(${c})"></i>`).join("")}</div></div><span>${x.s.s[2]}/${x.s.n}</span></div>`).join("")}<div class="lg"><i style="background:var(--ok)"></i>Done on time<i style="background:var(--wk)"></i>Done late<i style="background:var(--pr)"></i>In progress<i style="background:var(--no)"></i>Not started</div>`:""}
   <h3>Projects by job type</h3>${J.map((j,i)=>`<div class="br"><span>${j}</span><div class="bt"><div style="width:${jc[i]/jm*100}%;background:var(--pr)"></div></div><span>${jc[i]}</span></div>`).join("")}
   <h3>Completed per month</h3><div class="mo">${mo.map((v,i)=>`<div><i style="height:${v/mm*80}%"></i>${v||""}<br>${"JFMAMJJASOND"[i]}</div>`).join("")}</div>
-  <h3>Project list</h3><div class="sc"><table><tr><th>Engineer</th><th>Project</th><th>Job type</th><th>What they do</th><th>Status</th><th>Start</th><th>Due</th><th>Finished</th><th>Timing</th></tr>${rows.map(p=>`<tr><td>${esc(nm(p.owner))}</td><td>${esc(p.name)}</td><td>${esc(p.job||"Service")}</td><td>${esc(p.desc||"–")}</td><td>${ST[p.status]}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${fmt(p.done)}</td><td class="${late(p)?"bad":"ok"}">${p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"–")}</td></tr>`).join("")}</table></div></div>`;
+  <h3>Project list</h3><div class="sc"><table><tr><th>Engineer</th><th>Customer</th><th>Project name</th><th>Job type</th><th>Remark</th><th>Status</th><th>Start</th><th>Due</th><th>Finished</th><th>Timing</th></tr>${rows.map(p=>`<tr><td>${esc(nm(p.owner))}</td><td>${esc(p.name)}</td><td>${esc(p.job||"Service")}</td><td>${esc(p.desc||"–")}</td><td>${ST[p.status]}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${fmt(p.done)}</td><td class="${late(p)?"bad":"ok"}">${p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"–")}</td></tr>`).join("")}</table></div></div>`;
 }
 const q=v=>'"'+String(v).replace(/"/g,'""')+'"',csvOut=rows=>String.fromCharCode(65279)+rows.map(r=>r.map(q).join(",")).join(String.fromCharCode(10));
 const tag2=()=>$("yr").value+($("pp").value=="all"?"-all":"-"+nm($("pp").value).replace(/[^\p{L}\p{N}.-]+/gu,"_"));
 async function saveFile(name,data){const dl=await claude.use("downloads");if(!dl){note("Downloads are not available in this browser");return}try{await dl.save({filename:name,data})}catch(e){if(e.code!="declined")note("Download failed ("+(e.code||"error")+")")}}
 $("dl").onclick=()=>saveFile(`TDA-summary-${tag2()}.csv`,csvOut([["Engineer","Projects","Completed","On time","Late","Open","Overdue","On-time rate %"],...yearRows().map(x=>[x.name,x.n,x.done,x.ontime,x.late,x.open,x.overdue,x.rate])]));
-$("dd").onclick=()=>saveFile(`TDA-details-${tag2()}.csv`,csvOut([["Engineer","Project","Job type","What they do","Status","Start","Due","Finished","Timing"],...scoped($("yr").value).sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))).map(p=>[nm(p.owner),p.name,p.job||"Service",p.desc||"",ST[p.status],p.start||"",p.end||"",p.done||"",p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"")])]));
+$("dd").onclick=()=>saveFile(`TDA-details-${tag2()}.csv`,csvOut([["Engineer","Customer","Project name","Job type","Remark","Status","Start","Due","Finished","Timing"],...scoped($("yr").value).sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))).map(p=>[nm(p.owner),p.customer||"",p.name,p.job||"Service",p.desc||"",ST[p.status],p.start||"",p.end||"",p.done||"",p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"")])]));
 const dhOld=()=>saveFile(`TDA-dashboard-${tag2()}.html`,`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TDA Annual Dashboard ${$("yr").value}</title><style>${EXPCSS}${DCSS}</style></head><body><div class="wrap">${dashHTML()}</div></body></html>`);
 const oldDl=async()=>{
   const dl=await claude.use("downloads");if(!dl){note("Downloads are not available in this browser");return}
