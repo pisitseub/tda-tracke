@@ -336,7 +336,7 @@ const oldDl=async()=>{
     const tm=setTimeout(()=>note("Loading is taking a while — try refreshing the page"),10000);
     if(!isMgr)db.collection("pjt").doc(me).onSnapshot(sn=>{clearTimeout(tm);projects=(((sn.data()||{}).items)||[]).map(x=>({...x,owner:me}));render()},e=>note("Couldn’t load your projects ("+e.code+")"));
     if(isMgr)db.collection("pjt").onSnapshot(async s=>{clearTimeout(tm);projects=s.docs.flatMap(d=>((d.data()||{}).items||[]).map(x=>({...x,owner:d.id})));await resolveNames();render()},e=>note("Couldn’t load dashboard data ("+e.code+")"));
-  }catch(e){$("who").textContent="Connection error"}
+  }catch(e){console.error("TDA Tracker startup error:",e);$("who").textContent="Connection error: "+(e.code||e.message||"unknown error");note("Startup error: "+(e.code||e.message||String(e)))}
 })();
 </script>
 </body>
