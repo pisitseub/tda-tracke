@@ -55,12 +55,13 @@ function eventRow({ type, employee, project, beforeStatus, afterStatus }) {
   const title = isNew ? "New project submitted" : "Project status changed";
   const details = [
     ["Employee", employee],
-    ["Project", project.name || "(Untitled project)"],
+    ["Customer", project.customer || "—"],
+    ["Project name", project.name || "(Untitled project)"],
     ["Job type", project.job || "Service"],
     ["Status", isNew ? statusName(project.status) : `${statusName(beforeStatus)} → ${statusName(afterStatus)}`],
     ["Start date", project.start || "—"],
     ["Due date", project.end || "—"],
-    ["Work details", project.desc || "—"]
+    ["Remark", project.desc || "—"]
   ];
   const text = `${title}\n\n${details.map(([label, value]) => `${label}: ${value}`).join("\n")}`;
   const html = `<h2 style="margin:0 0 16px;color:#075985">${escapeHtml(title)}</h2>
@@ -180,6 +181,7 @@ exports.notifyOverdueProjects = onSchedule({
 
   const rows = overdue.map(({ employee, project }) => ({
     employee,
+    customer: String(project.customer || "—"),
     name: String(project.name || "(Untitled project)"),
     job: String(project.job || "Service"),
     due: String(project.end),
@@ -192,11 +194,12 @@ exports.notifyOverdueProjects = onSchedule({
     "",
     ...rows.map((p, index) => [
       `${index + 1}. ${p.name}`,
+      `Customer: ${p.customer}`,
       `Employee: ${p.employee}`,
       `Job type: ${p.job}`,
       `Due date: ${p.due}`,
       `Status: ${p.status}`,
-      `Work details: ${p.desc}`
+      `Remark: ${p.desc}`
     ].join("\n"))
   ].join("\n\n");
 
@@ -208,8 +211,8 @@ exports.notifyOverdueProjects = onSchedule({
     <div style="border:1px solid #e2e8f0;border-top:0;padding:20px;border-radius:0 0 12px 12px">
       <p>There are <strong>${rows.length}</strong> newly overdue project(s) that have not yet been reported.</p>
       <table cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:14px">
-        <tr style="text-align:left;background:#f1f5f9"><th>Employee</th><th>Project</th><th>Due date</th><th>Status</th></tr>
-        ${rows.map(p => `<tr><td style="border-bottom:1px solid #e2e8f0">${escapeHtml(p.employee)}</td><td style="border-bottom:1px solid #e2e8f0">${escapeHtml(p.name)}<br><small>${escapeHtml(p.job)}</small></td><td style="border-bottom:1px solid #e2e8f0;color:#b91c1c">${escapeHtml(p.due)}</td><td style="border-bottom:1px solid #e2e8f0">${escapeHtml(p.status)}</td></tr>`).join("")}
+        <tr style="text-align:left;background:#f1f5f9"><th>Employee</th><th>Customer</th><th>Project name</th><th>Due date</th><th>Status</th></tr>
+        ${rows.map(p => `<tr><td style="border-bottom:1px solid #e2e8f0">${escapeHtml(p.employee)}</td><td style="border-bottom:1px solid #e2e8f0">${escapeHtml(p.customer)}</td><td style="border-bottom:1px solid #e2e8f0">${escapeHtml(p.name)}<br><small>${escapeHtml(p.job)}</small></td><td style="border-bottom:1px solid #e2e8f0;color:#b91c1c">${escapeHtml(p.due)}</td><td style="border-bottom:1px solid #e2e8f0">${escapeHtml(p.status)}</td></tr>`).join("")}
       </table>
       <p style="color:#64748b;font-size:12px;margin-top:20px">Automatic daily notification from TDA Project Tracker.</p>
     </div></div>`;
