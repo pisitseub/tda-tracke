@@ -57,7 +57,7 @@ tr:last-child td{border-bottom:0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1626;--card:#10223a;--in:#0b1a2e;--bd:#1e3a5c;--pr:#0ea5e9;--pr2:#38bdf8}}
 :root[data-theme="dark"]{--bg:#0a1626;--card:#10223a;--in:#0b1a2e;--bd:#1e3a5c;--pr:#0ea5e9;--pr2:#38bdf8}
 .job{display:inline-block;margin-left:6px;padding:1px 9px;border-radius:6px;font-size:.72rem;font-weight:700;background:rgba(14,165,233,.14);color:var(--pr);vertical-align:middle}
-.profilebar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}.profilepic{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.8);background:#fff}.profileinitial{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.65);font-weight:700}.profilemeta{min-width:0;flex:1}.profilemeta strong,.profilemeta span{display:block;overflow-wrap:anywhere}.profilemeta span{font-size:.8rem;opacity:.82}.profileaction{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 11px;border-radius:9px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}.profileaction:disabled{opacity:.55;cursor:wait}.logoutbtn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 13px;border-radius:9px;font:inherit;font-weight:600;cursor:pointer}
+.project-photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.project-photos img{width:92px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)}.profilebar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}.profilepic{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.8);background:#fff}.profileinitial{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.65);font-weight:700}.profilemeta{min-width:0;flex:1}.profilemeta strong,.profilemeta span{display:block;overflow-wrap:anywhere}.profilemeta span{font-size:.8rem;opacity:.82}.profileaction{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 11px;border-radius:9px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}.profileaction:disabled{opacity:.55;cursor:wait}.logoutbtn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 13px;border-radius:9px;font:inherit;font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
@@ -372,12 +372,14 @@ $("myExportSummary").onclick=()=>{
   const data=[headers,[names[me]||"Me",s.n,s.s[0],s.s[1],s.s[2],s.ontime,s.lateDone,s.overdue,rate]];
   saveFile("TDA-my-summary-"+myExportTag()+".csv",csvOut(data));
 };
+$("myExportPhotos").onclick=async()=>{try{await saveFile("TDA-my-work-report-"+myExportTag()+".html",buildPhotoReport(myExportRows(),"TDA Work Report - "+(names[me]||"My Projects")))}catch(e){note("Photo report export failed: "+(e.code||e.message||"error"))}};
 $("myExportDetails").onclick=()=>{
   const rows=myExportRows().sort((a,b)=>(a.start||"").localeCompare(b.start||"")||(a.name||"").localeCompare(b.name||""));
   const data=[["Employee","Customer","Project name","Job type","Remark","Status","Start","Due","Finished","Timing"],
     ...rows.map(p=>[names[me]||"Me",p.customer||"",p.name||"",p.job||"Service",p.desc||"",ST[p.status]||"Unknown",p.start||"",p.end||"",p.done||"",p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"")])];
   saveFile("TDA-my-project-details-"+myExportTag()+".csv",csvOut(data));
 };
+$("exportPhotos").onclick=async()=>{try{await saveFile("TDA-work-report-"+tag2()+".html",buildPhotoReport(scoped($("yr").value),"TDA Annual Work Report "+$("yr").value))}catch(e){note("Photo report export failed: "+(e.code||e.message||"error"))}};
 $("dl").onclick=()=>saveFile(`TDA-summary-${tag2()}.csv`,csvOut([["Engineer","Projects","Completed","On time","Late","Open","Overdue","On-time rate %"],...yearRows().map(x=>[x.name,x.n,x.done,x.ontime,x.late,x.open,x.overdue,x.rate])]));
 $("dd").onclick=()=>saveFile(`TDA-details-${tag2()}.csv`,csvOut([["Engineer","Customer","Project name","Job type","Remark","Status","Start","Due","Finished","Timing"],...scoped($("yr").value).sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))).map(p=>[nm(p.owner),p.customer||"",p.name,p.job||"Service",p.desc||"",ST[p.status],p.start||"",p.end||"",p.done||"",p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"")])]));
 const dhOld=()=>saveFile(`TDA-dashboard-${tag2()}.html`,`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TDA Annual Dashboard ${$("yr").value}</title><style>${EXPCSS}${DCSS}</style></head><body><div class="wrap">${dashHTML()}</div></body></html>`);
@@ -424,8 +426,8 @@ const oldDl=async()=>{
     if(isMgr){$("t2").classList.remove("hide");$("t3").classList.remove("hide")}
     if(isDashboardViewer&&!isHead){$("t1").classList.add("hide");$("v1").classList.add("hide");show(2)}
     const tm=setTimeout(()=>note("Loading is taking a while — try refreshing the page"),10000);
-    if(!isMgr)db.collection("pjt").doc(me).onSnapshot(sn=>{clearTimeout(tm);projects=(((sn.data()||{}).items)||[]).map(x=>({...x,owner:me}));render()},e=>note("Couldn’t load your projects ("+e.code+")"));
-    if(isMgr)db.collection("pjt").onSnapshot(async s=>{clearTimeout(tm);projects=s.docs.flatMap(d=>((d.data()||{}).items||[]).map(x=>({...x,owner:d.id})));await resolveNames();render()},e=>note("Couldn’t load dashboard data ("+e.code+")"));
+    if(!isMgr)db.collection("pjt").doc(me).onSnapshot(async sn=>{clearTimeout(tm);projects=(((sn.data()||{}).items)||[]).map(x=>({...x,owner:me}));try{await loadProjectPhotos([me])}catch(photoErr){console.warn("Could not load project photos",photoErr);note("Could not load work photos ("+(photoErr.code||photoErr.message)+")")}render()},e=>note("Couldn’t load your projects ("+e.code+")"));
+    if(isMgr)db.collection("pjt").onSnapshot(async s=>{clearTimeout(tm);projects=s.docs.flatMap(d=>((d.data()||{}).items||[]).map(x=>({...x,owner:d.id})));await resolveNames();try{await loadProjectPhotos([...new Set(projects.map(p=>p.owner))])}catch(photoErr){console.warn("Could not load team work photos",photoErr);note("Could not load team work photos ("+(photoErr.code||photoErr.message)+")")}render()},e=>note("Couldn’t load dashboard data ("+e.code+")"));
   }catch(e){console.error("TDA Tracker startup error:",e);$("who").textContent="Connection error: "+(e.code||e.message||"unknown error");note("Startup error: "+(e.code||e.message||String(e)))}
 })();
 </script>
