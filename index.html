@@ -38,7 +38,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--pr);outline-offs
 .p0{color:var(--no);background:var(--nob)}.p1{color:var(--wk);background:var(--wkb)}.p2{color:var(--ok);background:var(--okb)}.pb{color:var(--bad);background:var(--badb)}
 .bad{color:var(--bad);font-weight:600}.ok{color:var(--ok);font-weight:600}
 .pr{padding:14px;border:1px solid var(--bd);border-radius:12px;margin-bottom:10px;background:var(--in)}
-.pr.l{border-left:4px solid var(--bad)}
+.pr.l{border:2px solid var(--bad);background:var(--badb)}
+.date-pair{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+@media(max-width:420px){.date-pair{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.date-pair input{padding:9px 7px;font-size:.82rem}}
 .pr .t{font-weight:700}
 .pr .acts{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .pr .acts select{width:auto;padding:7px 10px;font-size:.82rem}
@@ -80,8 +82,10 @@ tr:last-child td{border-bottom:0}
         <div><label>Project name</label><input id="fn" placeholder="e.g. Regression suite migration"></div>
         <div><label>Job type</label><select id="fj"><option>Service</option><option>Mass</option><option>Support</option><option>NPI</option></select></div>
         <div><label>Status</label><select id="fs"><option value="0">Not started</option><option value="1">In progress</option><option value="2">Completed</option></select></div>
-        <div><label>Start date</label><input type="date" id="fa"></div>
-        <div><label>Due date</label><input type="date" id="fb"></div>
+        <div class="date-pair">
+          <div><label>Start date</label><input type="date" id="fa"></div>
+          <div><label>Due date</label><input type="date" id="fb"></div>
+        </div>
       </div>
       <div style="margin-top:12px"><label>Remark</label><textarea id="fd" rows="3" placeholder="Additional notes or details…"></textarea></div><div style="margin-top:12px"><label>Work photos (up to 3 per project)</label><input id="projectPhotos" type="file" accept="image/*" multiple><div class="mu">Images are automatically resized. Existing photos remain when editing.</div><div id="photoSelection" class="mu"></div></div>
       <div style="margin-top:12px" class="row"><span class="bad" id="fe"></span><span><button class="btn s hide" id="fc">Cancel</button> <button class="btn" id="fx">Save project</button></span></div>
