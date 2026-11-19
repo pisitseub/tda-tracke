@@ -193,6 +193,45 @@ function renderMine(){
     <div class="acts"><select data-s="${p.id}">${ST.map((s,i)=>`<option value="${i}"${i==p.status?" selected":""}>${s}</option>`).join("")}</select>
     <button class="btn s" data-e="${p.id}">Edit</button><button class="btn s" data-d="${p.id}">Delete</button></div></div>`).join(""):'<div class="c empty">No projects yet — add your first one above.</div>';
 }
+
+function renderPhotoThumbs(p){
+  const imgs=imagesByProject[p.owner+":"+p.id]||[];
+  if(!imgs.length)return "";
+  return '<div class="project-photos">'+imgs.map((im,i)=>'<a href="'+im.dataUrl+'" target="_blank" rel="noopener"><img src="'+im.dataUrl+'" alt="Work photo '+(i+1)+'"></a>').join("")+'</div>';
+}
+async function compressProjectPhoto(file){
+  if(!file.type.startsWith("image/"))throw new Error("Only image files are supported.");
+  const source=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
+  const img=await new Promise((resolve,reject)=>{const x=new Image();x.onload=()=>resolve(x);x.onerror=reject;x.src=source});
+  const scale=Math.min(1,1200/Math.max(img.width,img.height));
+  const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
+  canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+  let quality=.78,blob;
+  do{blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));quality-=.08}while(blob&&blob.size>420000&&quality>=.46);
+  if(!blob||blob.size>480000)throw new Error("Photo is too large after compression.");
+  const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob)});
+  return {dataUrl,name:file.name||"work-photo.jpg"};
+}
+async function uploadProjectPhotos(owner,projectId,files){
+  const chosen=[...files].slice(0,3);if(!chosen.length)return;
+  const ref=firebase.firestore().collection("pjt").doc(owner).collection("projectImages");
+  const existing=await ref.where("projectId","==",projectId).get();
+  if(existing.size+chosen.length>3)throw new Error("Maximum 3 photos per project. Existing photos are kept.");
+  for(let i=0;i<chosen.length;i++){
+    const photo=await compressProjectPhoto(chosen[i]);
+    await ref.doc(projectId+"_"+(existing.size+i)).set({projectId:projectId,index:existing.size+i,dataUrl:photo.dataUrl,name:photo.name,updatedAt:Date.now()});
+  }
+}
+async function loadProjectPhotos(ownerIds){
+  const next={};
+  await Promise.all(ownerIds.map(async owner=>{
+    const snap=await firebase.firestore().collection("pjt").doc(owner).collection("projectImages").get();
+    snap.forEach(doc=>{const d=doc.data();if(!d.projectId||!d.dataUrl)return;const key=owner+":"+d.projectId;(next[key]||(next[key]=[])).push(d)});
+  }));
+  Object.keys(next).forEach(k=>next[k].sort((a,b)=>(a.index||0)-(b.index||0)));
+  imagesByProject=next;
+}
+
 function stats(list){
   const r={n:list.length,s:[0,0,0],ontime:0,lateDone:0,overdue:0};
   list.forEach(p=>{r.s[p.status]++;if(p.status==2){late(p)?r.lateDone++:r.ontime++}else if(late(p))r.overdue++});
