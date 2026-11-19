@@ -249,7 +249,7 @@ function renderMyExportOptions(){
   const select=$("myExportYear");
   if(!select)return;
   const previous=select.value||"all";
-  const years=[...new Set(projects.filter(p=>p.owner===me).map(p=>(p.start||p.created||"").slice(0,4)).filter(y=>/^\\d{4}$/.test(y)))].sort().reverse();
+  const years=[...new Set(projects.filter(p=>p.owner===me).map(p=>(p.start||p.created||"").slice(0,4)).filter(y=>/^\d{4}$/.test(y)))].sort().reverse();
   select.innerHTML='<option value="all">All years</option>'+years.map(y=>'<option value="'+y+'">'+y+'</option>').join("");
   select.value=years.includes(previous)?previous:"all";
 }
@@ -310,7 +310,7 @@ function myExportRows(){
 }
 function myExportTag(){
   const year=$("myExportYear").value||"all";
-  const person=String(names[me]||"employee").trim().replace(/[^\\p{L}\\p{N}.-]+/gu,"_");
+  const person=String(names[me]||"employee").trim().replace(/[^\p{L}\p{N}.-]+/gu,"_");
   return person+"-"+year;
 }
 $("myExportSummary").onclick=()=>{
