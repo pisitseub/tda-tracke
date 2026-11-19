@@ -267,8 +267,8 @@ function renderMgr(){
     <div class="mu">${["Service","Mass","Support","NPI"].map(j=>j+" "+visibleBy[id].filter(p=>(p.job||"Service")==j).length).join(" · ")}</div>
     ${cur?`<div style="font-size:.85rem;margin-top:8px"><span class="mu">Working on:</span> ${cur}</div>`:""}</div>`}).join(""):'<div class="empty" style="grid-column:1/-1">No employees or projects match these filters.</div>';
   const all=[...visible].sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))||(a.end||"9").localeCompare(b.end||"9"));
-  $("all").innerHTML="<tr><th>Engineer</th><th>Customer</th><th>Project name</th><th>Job type</th><th>Remark</th><th>Status</th><th>Start</th><th>Due</th><th>Finished</th><th>Timing</th></tr>"+
-    (all.length?all.map(p=>`<tr><td>${esc(nm(p.owner))}</td><td>${esc(p.customer||"–")}</td><td>${esc(p.name)}</td><td>${esc(p.job||"Service")}</td><td style="white-space:normal;min-width:220px">${esc(p.desc||"–")}</td><td>${pill(p)}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${fmt(p.done)}</td><td>${p.status==2?(late(p)?'<span class="bad">Late</span>':'<span class="ok">On time</span>'):(late(p)?'<span class="bad">Overdue</span>':"–")}</td></tr>`).join(""):'<tr><td colspan="10" class="empty">No projects match these filters.</td></tr>');
+  $("all").innerHTML="<tr><th>Engineer</th><th>Customer</th><th>Project name</th><th>Job type</th><th>Remark</th><th>Work photos</th><th>Status</th><th>Start</th><th>Due</th><th>Finished</th><th>Timing</th></tr>"+
+    (all.length?all.map(p=>`<tr><td>${esc(nm(p.owner))}</td><td>${esc(p.customer||"–")}</td><td>${esc(p.name)}</td><td>${esc(p.job||"Service")}</td><td style="white-space:normal;min-width:220px">${esc(p.desc||"–")}</td><td>${renderPhotoThumbs(p)}</td><td>${pill(p)}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${fmt(p.done)}</td><td>${p.status==2?(late(p)?'<span class="bad">Late</span>':'<span class="ok">On time</span>'):(late(p)?'<span class="bad">Overdue</span>':"–")}</td></tr>`).join(""):'<tr><td colspan="10" class="empty">No projects match these filters.</td></tr>');
 }
 function yearRows(){
   const y=$("yr").value,by={};
