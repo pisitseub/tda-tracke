@@ -345,6 +345,17 @@ function dashHTML(){
 const q=v=>'"'+String(v).replace(/"/g,'""')+'"',csvOut=rows=>String.fromCharCode(65279)+rows.map(r=>r.map(q).join(",")).join(String.fromCharCode(10));
 const tag2=()=>$("yr").value+($("pp").value=="all"?"-all":"-"+nm($("pp").value).replace(/[^\p{L}\p{N}.-]+/gu,"_"));
 async function saveFile(name,data){const dl=await window.claude.use("downloads");if(!dl){note("Downloads are not available in this browser");return}try{await dl.save({filename:name,data})}catch(e){if(e.code!="declined")note("Download failed ("+(e.code||"error")+")")}}
+
+function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
+function buildPhotoReport(rows,title){
+  const cards=rows.map(p=>{
+    const imgs=imagesByProject[p.owner+":"+p.id]||[];
+    const photoHtml=imgs.length?imgs.map(im=>'<figure><img src="'+im.dataUrl+'" alt="Work photo"><figcaption>'+escapeHtml(im.name||"Work photo")+'</figcaption></figure>').join(""):"<i>No work photos attached</i>";
+    return '<article><h2>'+escapeHtml(p.name)+'</h2><p><b>Employee:</b> '+escapeHtml(nm(p.owner))+' &nbsp; <b>Customer:</b> '+escapeHtml(p.customer||"-")+'</p><p><b>Job:</b> '+escapeHtml(p.job||"Service")+' &nbsp; <b>Status:</b> '+escapeHtml(ST[p.status]||"-")+'</p><p><b>Start:</b> '+escapeHtml(p.start||"-")+' &nbsp; <b>Due:</b> '+escapeHtml(p.end||"-")+' &nbsp; <b>Finished:</b> '+escapeHtml(p.done||"-")+'</p><p><b>Remark:</b> '+escapeHtml(p.desc||"-")+'</p><div class="photos">'+photoHtml+'</div></article>';
+  }).join("");
+  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escapeHtml(title)+'</title><style>body{font:15px Arial,sans-serif;color:#172033;margin:24px;background:#f3f6fa}main{max-width:1000px;margin:auto}header,article{background:#fff;padding:22px;margin:0 0 18px;border:1px solid #dbe3ed;border-radius:12px}h1{margin:0 0 8px}h2{margin:0 0 10px}.photos{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}.photos figure{margin:0;width:min(280px,100%)}.photos img{width:100%;max-height:260px;object-fit:contain;border:1px solid #ddd;border-radius:8px}.photos figcaption{font-size:12px;color:#667085;margin-top:4px}@media print{body{background:#fff;margin:0}header,article{break-inside:avoid}}</style></head><body><main><header><h1>'+escapeHtml(title)+'</h1><p>Generated '+escapeHtml(today())+' · '+rows.length+' projects</p><button onclick="window.print()">Print / Save as PDF</button></header>'+cards+'</main></body></html>';
+}
+
 function myExportRows(){
   const year=$("myExportYear").value||"all";
   return projects.filter(p=>p.owner===me&&(year==="all"||(p.start||p.created||"").slice(0,4)===year));
