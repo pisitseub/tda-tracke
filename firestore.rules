@@ -33,5 +33,16 @@ service cloud.firestore {
         && request.auth.uid == uid
         && !dashboardViewer();
     }
+
+    // Work photos are stored separately from the project list to avoid
+    // exceeding Firestore's 1 MiB document limit.
+    match /pjt/{uid}/projectImages/{imageId} {
+      allow read: if signedIn()
+        && (request.auth.uid == uid || head() || dashboardViewer());
+
+      allow create, update, delete: if signedIn()
+        && request.auth.uid == uid
+        && !dashboardViewer();
+    }
   }
 }
