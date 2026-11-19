@@ -83,7 +83,7 @@ tr:last-child td{border-bottom:0}
         <div><label>Start date</label><input type="date" id="fa"></div>
         <div><label>Due date</label><input type="date" id="fb"></div>
       </div>
-      <div style="margin-top:12px"><label>Remark</label><textarea id="fd" rows="3" placeholder="Additional notes or details…"></textarea></div>
+      <div style="margin-top:12px"><label>Remark</label><textarea id="fd" rows="3" placeholder="Additional notes or details…"></textarea></div><div style="margin-top:12px"><label>Work photos (up to 3 per project)</label><input id="projectPhotos" type="file" accept="image/*" multiple><div class="mu">Images are automatically resized. Existing photos remain when editing.</div><div id="photoSelection" class="mu"></div></div>
       <div style="margin-top:12px" class="row"><span class="bad" id="fe"></span><span><button class="btn s hide" id="fc">Cancel</button> <button class="btn" id="fx">Save project</button></span></div>
     </div>
     <h2 style="margin:6px 2px 10px">My projects</h2>
@@ -92,7 +92,7 @@ tr:last-child td{border-bottom:0}
       <div class="row"><h2 style="margin:0">Export my project data</h2><span class="mu">You can export only your own projects</span></div>
       <div class="g" style="margin-top:12px;grid-template-columns:minmax(150px,220px) 1fr">
         <div><label>Year</label><select id="myExportYear"><option value="all">All years</option></select></div>
-        <div><label>Download</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn s" id="myExportSummary" type="button">My summary CSV</button><button class="btn" id="myExportDetails" type="button">My project details CSV</button></div></div>
+        <div><label>Download</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn s" id="myExportSummary" type="button">My summary CSV</button><button class="btn" id="myExportDetails" type="button">My project details CSV</button><button class="btn s" id="myExportPhotos" type="button">Report with photos (HTML)</button></div></div>
       </div>
     </div>
   </section>
@@ -119,7 +119,7 @@ tr:last-child td{border-bottom:0}
         <span style="display:flex;gap:8px"><select id="yr" style="width:auto"></select><select id="pp" style="width:auto"><option value="all">All engineers</option></select></span></div>
       <p class="mu" style="margin-top:0">Counts projects started in the selected year. “On time” = completed on or before the due date. This dashboard is visible only to the department head. At year-end, export the CSV files (summary or per-person details) to send to the CEO.</p>
       <div class="sc"><table id="rep"></table></div>
-      <div class="row" style="margin-top:14px"><span class="mu">Export for the selected year &amp; engineer</span><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn s" id="dl">Summary CSV</button><button class="btn" id="dd">Details CSV</button></span></div>
+      <div class="row" style="margin-top:14px"><span class="mu">Export for the selected year &amp; engineer</span><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn s" id="dl">Summary CSV</button><button class="btn" id="dd">Details CSV</button><button class="btn s" id="exportPhotos">Report with photos (HTML)</button></span></div>
       <div id="dash" style="margin-top:10px"></div>
     </div>
   </section>
@@ -137,7 +137,7 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const today=()=>new Date().toISOString().slice(0,10);
 const fmt=d=>d?new Date(d+"T00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"–";
 const COL=["#0284c7","#0ea5e9","#0891b2","#2563eb","#0d9488","#3b82f6","#0369a1","#06b6d4"];
-let db,user,me=null,isMgr=false,isHead=false,isDashboardViewer=false,projects=[],names={},editId=null;
+let db,user,me=null,isMgr=false,isHead=false,isDashboardViewer=false,projects=[],names={},editId=null,imagesByProject={};
 
 const strip=({owner,...r})=>r;
 const mineItems=()=>projects.filter(p=>p.owner===me).map(strip);
