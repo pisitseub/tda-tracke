@@ -50,11 +50,13 @@
           return;
         }
         button.disabled = true;
+        button.textContent = "Redirecting to sign-in…";
         try {
-          const credential = await auth.signInWithPopup(provider(type));
-          await credential.user.updateProfile({ displayName: enteredName });
-          location.reload();
+          // Redirect avoids popup blockers commonly enforced on company computers.
+          try { sessionStorage.setItem("tda_login_name", enteredName); } catch (_) {}
+          await auth.signInWithRedirect(provider(type));
         } catch (e) {
+          try { sessionStorage.removeItem("tda_login_name"); } catch (_) {}
           console.error("TDA Tracker sign-in error:", {
             provider: type,
             code: e && e.code,
@@ -65,7 +67,7 @@
           overlay.querySelector("#lm").textContent =
             "Sign-in failed: " + (e.code || "unknown error") +
             (e.message ? " — " + e.message : "");
-        } finally {
+          button.textContent = type === "microsoft" ? "Continue with Microsoft" : "Continue with Google";
           button.disabled = false;
         }
       };
@@ -76,9 +78,33 @@
     overlay.querySelector("#lm").textContent = msg || "Sign in with a verified Google or Microsoft account.";
   }
 
+  // Complete the OAuth redirect before processing the signed-in user.
+  // This also restores the employee name entered on the login screen.
+  let redirectError = null;
+  const redirectReady = auth.getRedirectResult().then(async result => {
+    if (result && result.user) {
+      let enteredName = "";
+      try {
+        enteredName = sessionStorage.getItem("tda_login_name") || "";
+        sessionStorage.removeItem("tda_login_name");
+      } catch (_) {}
+      if (enteredName && result.user.displayName !== enteredName) {
+        await result.user.updateProfile({ displayName: enteredName });
+      }
+    }
+    return result;
+  }).catch(error => {
+    redirectError = error;
+    console.error("TDA Tracker redirect sign-in error:", error);
+    return null;
+  });
+
   auth.onAuthStateChanged(async u => {
+    await redirectReady;
     if (!u) {
-      login("Enter your name, then choose Google or Microsoft.");
+      login(redirectError
+        ? "Sign-in failed: " + (redirectError.code || "unknown error") + (redirectError.message ? " — " + redirectError.message : "")
+        : "Enter your name, then choose Google or Microsoft.");
       return;
     }
     const email = String(u.email || "").toLowerCase();
