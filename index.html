@@ -190,6 +190,7 @@ function renderMine(){
     ${p.customer?`<div class="mu">Customer: ${esc(p.customer)}</div>`:""}
     <div class="mu">${fmt(p.start)} → ${fmt(p.end)}${p.status==2?" · finished "+fmt(p.done):""} ${late(p)?`<span class="bad">· ${p.status==2?"finished late":"overdue"}</span>`:""}</div>
     ${p.desc?`<div style="margin-top:6px;font-size:.9rem"><span class="mu">Remark:</span> ${esc(p.desc)}</div>`:""}
+    ${renderPhotoThumbs(p)}
     <div class="acts"><select data-s="${p.id}">${ST.map((s,i)=>`<option value="${i}"${i==p.status?" selected":""}>${s}</option>`).join("")}</select>
     <button class="btn s" data-e="${p.id}">Edit</button><button class="btn s" data-d="${p.id}">Delete</button></div></div>`).join(""):'<div class="c empty">No projects yet — add your first one above.</div>';
 }
@@ -296,7 +297,8 @@ function render(){renderMine();renderMyExportOptions();if(isMgr){renderMgr();ren
 function show(n){[1,2,3].forEach(i=>{$("v"+i).classList.toggle("hide",i!=n);$("t"+i).classList.toggle("on",i==n)})}
 [1,2,3].forEach(i=>$("t"+i).onclick=()=>show(i));
 
-function resetForm(){editId=null;["fcustomer","fn","fa","fb","fd"].forEach(i=>$(i).value="");$("fs").value="0";$("fj").value="Service";$("ft").textContent="Add a new project";$("fc").classList.add("hide");$("fe").textContent=""}
+function resetForm(){editId=null;["fcustomer","fn","fa","fb","fd","projectPhotos"].forEach(i=>$(i).value="");$("photoSelection").textContent="";$("fs").value="0";$("fj").value="Service";$("ft").textContent="Add a new project";$("fc").classList.add("hide");$("fe").textContent=""}
+$("projectPhotos").onchange=()=>{$("photoSelection").textContent=[...$("projectPhotos").files].map(f=>f.name).join(", ")};
 $("fc").onclick=resetForm;
 $("fx").onclick=async()=>{
   const name=$("fn").value.trim(),start=$("fa").value,end=$("fb").value;
@@ -304,13 +306,13 @@ $("fx").onclick=async()=>{
   if(start&&end&&end<start){$("fe").textContent="Due date can’t be before the start date";return}
   const status=+$("fs").value,old=projects.find(p=>p.id==editId);
   const data={owner:me,customer:$("fcustomer").value.trim(),name,job:$("fj").value,desc:$("fd").value.trim(),status,start,end,done:status==2?(old&&old.done)||today():"",created:(old&&old.created)||today()};
-  try{const id=editId||("p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));const items=mineItems().filter(x=>x.id!=id);items.push({id,...strip(data)});await saveMine(items);if(!old)notifyMail("new_project",data);else if(Number(old.status)!==Number(data.status))notifyMail("status_changed",data,old.status);resetForm()}
+  try{const id=editId||("p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));const items=mineItems().filter(x=>x.id!=id);items.push({id,...strip(data)});await saveMine(items);await uploadProjectPhotos(me,id,$("projectPhotos").files);if(!old)notifyMail("new_project",data);else if(Number(old.status)!==Number(data.status))notifyMail("status_changed",data,old.status);resetForm();await loadProjectPhotos([me]);render()}
   catch(e){console.error("Project save failed:",e);$("fe").textContent="Save failed: "+(e.code||e.message||"unknown error")}
 };
 $("mine").onclick=async e=>{
   const t=e.target,p=projects.find(x=>x.id==(t.dataset.e||t.dataset.d));if(!p)return;
-  if(t.dataset.e){editId=p.id;$("fcustomer").value=p.customer||"";$("fn").value=p.name;$("fj").value=p.job||"Service";$("fs").value=p.status;$("fa").value=p.start||"";$("fb").value=p.end||"";$("fd").value=p.desc||"";$("ft").textContent="Edit project";$("fc").classList.remove("hide");scrollTo(0,0)}
-  if(t.dataset.d&&confirm("Delete “"+p.name+"”?"))try{await saveMine(mineItems().filter(x=>x.id!=p.id))}catch(x){console.error("Project delete failed:",x);note("Delete failed: "+(x.code||x.message||"unknown error"))}
+  if(t.dataset.e){editId=p.id;$("fcustomer").value=p.customer||"";$("fn").value=p.name;$("fj").value=p.job||"Service";$("fs").value=p.status;$("fa").value=p.start||"";$("fb").value=p.end||"";$("fd").value=p.desc||"";$("photoSelection").textContent=(imagesByProject[me+":"+p.id]||[]).length+" existing photo(s); add more if needed";$("ft").textContent="Edit project";$("fc").classList.remove("hide");scrollTo(0,0)}
+  if(t.dataset.d&&confirm("Delete “"+p.name+"”?"))try{await saveMine(mineItems().filter(x=>x.id!=p.id));const ref=firebase.firestore().collection("pjt").doc(me).collection("projectImages");const pics=await ref.where("projectId","==",p.id).get();await Promise.all(pics.docs.map(d=>d.ref.delete()));await loadProjectPhotos([me]);render()}catch(x){console.error("Project delete failed:",x);note("Delete failed: "+(x.code||x.message||"unknown error"))}
 };
 $("mine").onchange=async e=>{
   const id=e.target.dataset.s;if(!id)return;const p=projects.find(x=>x.id==id),s=+e.target.value;
