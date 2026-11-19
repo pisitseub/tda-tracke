@@ -88,6 +88,13 @@ tr:last-child td{border-bottom:0}
     </div>
     <h2 style="margin:6px 2px 10px">My projects</h2>
     <div id="mine"></div>
+    <div class="c">
+      <div class="row"><h2 style="margin:0">Export my project data</h2><span class="mu">You can export only your own projects</span></div>
+      <div class="g" style="margin-top:12px;grid-template-columns:minmax(150px,220px) 1fr">
+        <div><label>Year</label><select id="myExportYear"><option value="all">All years</option></select></div>
+        <div><label>Download</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn s" id="myExportSummary" type="button">My summary CSV</button><button class="btn" id="myExportDetails" type="button">My project details CSV</button></div></div>
+      </div>
+    </div>
   </section>
 
   <section id="v2" class="hide">
@@ -238,7 +245,15 @@ function renderRep(){
   $("rep").innerHTML="<tr><th>Engineer</th><th>Projects</th><th>Completed</th><th>On time</th><th>Late</th><th>Open</th><th>Overdue</th><th>On-time rate</th></tr>"+
     (r.length?r.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${x.n}</td><td>${x.done}</td><td>${x.ontime}</td><td>${x.late}</td><td>${x.open}</td><td>${x.overdue}</td><td><b class="${x.rate>=80?"ok":x.rate<50&&x.done?"bad":""}">${x.rate}%</b></td></tr>`).join(""):'<tr><td colspan="8" class="empty">No projects in this year</td></tr>');$("dash").innerHTML=dashHTML();
 }
-function render(){renderMine();if(isMgr){renderMgr();renderRep()}}
+function renderMyExportOptions(){
+  const select=$("myExportYear");
+  if(!select)return;
+  const previous=select.value||"all";
+  const years=[...new Set(projects.filter(p=>p.owner===me).map(p=>(p.start||p.created||"").slice(0,4)).filter(y=>/^\\d{4}$/.test(y)))].sort().reverse();
+  select.innerHTML='<option value="all">All years</option>'+years.map(y=>'<option value="'+y+'">'+y+'</option>').join("");
+  select.value=years.includes(previous)?previous:"all";
+}
+function render(){renderMine();renderMyExportOptions();if(isMgr){renderMgr();renderRep()}}
 function show(n){[1,2,3].forEach(i=>{$("v"+i).classList.toggle("hide",i!=n);$("t"+i).classList.toggle("on",i==n)})}
 [1,2,3].forEach(i=>$("t"+i).onclick=()=>show(i));
 
@@ -289,6 +304,28 @@ function dashHTML(){
 const q=v=>'"'+String(v).replace(/"/g,'""')+'"',csvOut=rows=>String.fromCharCode(65279)+rows.map(r=>r.map(q).join(",")).join(String.fromCharCode(10));
 const tag2=()=>$("yr").value+($("pp").value=="all"?"-all":"-"+nm($("pp").value).replace(/[^\p{L}\p{N}.-]+/gu,"_"));
 async function saveFile(name,data){const dl=await window.claude.use("downloads");if(!dl){note("Downloads are not available in this browser");return}try{await dl.save({filename:name,data})}catch(e){if(e.code!="declined")note("Download failed ("+(e.code||"error")+")")}}
+function myExportRows(){
+  const year=$("myExportYear").value||"all";
+  return projects.filter(p=>p.owner===me&&(year==="all"||(p.start||p.created||"").slice(0,4)===year));
+}
+function myExportTag(){
+  const year=$("myExportYear").value||"all";
+  const person=String(names[me]||"employee").trim().replace(/[^\\p{L}\\p{N}.-]+/gu,"_");
+  return person+"-"+year;
+}
+$("myExportSummary").onclick=()=>{
+  const rows=myExportRows(),s=stats(rows);
+  const rate=s.s[2]?Math.round(s.ontime/s.s[2]*100):0;
+  const headers=["Employee","Projects","Not started","In progress","Completed","On time","Completed late","Overdue","On-time rate %"];
+  const data=[headers,[names[me]||"Me",s.n,s.s[0],s.s[1],s.s[2],s.ontime,s.lateDone,s.overdue,rate]];
+  saveFile("TDA-my-summary-"+myExportTag()+".csv",csvOut(data));
+};
+$("myExportDetails").onclick=()=>{
+  const rows=myExportRows().sort((a,b)=>(a.start||"").localeCompare(b.start||"")||(a.name||"").localeCompare(b.name||""));
+  const data=[["Employee","Customer","Project name","Job type","Remark","Status","Start","Due","Finished","Timing"],
+    ...rows.map(p=>[names[me]||"Me",p.customer||"",p.name||"",p.job||"Service",p.desc||"",ST[p.status]||"Unknown",p.start||"",p.end||"",p.done||"",p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"")])];
+  saveFile("TDA-my-project-details-"+myExportTag()+".csv",csvOut(data));
+};
 $("dl").onclick=()=>saveFile(`TDA-summary-${tag2()}.csv`,csvOut([["Engineer","Projects","Completed","On time","Late","Open","Overdue","On-time rate %"],...yearRows().map(x=>[x.name,x.n,x.done,x.ontime,x.late,x.open,x.overdue,x.rate])]));
 $("dd").onclick=()=>saveFile(`TDA-details-${tag2()}.csv`,csvOut([["Engineer","Customer","Project name","Job type","Remark","Status","Start","Due","Finished","Timing"],...scoped($("yr").value).sort((a,b)=>nm(a.owner).localeCompare(nm(b.owner))).map(p=>[nm(p.owner),p.customer||"",p.name,p.job||"Service",p.desc||"",ST[p.status],p.start||"",p.end||"",p.done||"",p.status==2?(late(p)?"Late":"On time"):(late(p)?"Overdue":"")])]));
 const dhOld=()=>saveFile(`TDA-dashboard-${tag2()}.html`,`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TDA Annual Dashboard ${$("yr").value}</title><style>${EXPCSS}${DCSS}</style></head><body><div class="wrap">${dashHTML()}</div></body></html>`);
